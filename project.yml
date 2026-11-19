@@ -18,6 +18,16 @@ targets:
           - Info.plist
     info:
       path: iCar/Info.plist
+      properties:
+        CFBundleDisplayName: 岁岁长安
+        CFBundleDevelopmentRegion: zh_CN
+        CFBundleShortVersionString: "0.1"
+        UILaunchScreen: {}
+        UIUserInterfaceStyle: Dark
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiredDeviceCapabilities:
+          - arm64
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cn.icar.native
