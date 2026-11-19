@@ -6,6 +6,16 @@ struct SettingsView: View {
     @State private var confirm = Store.get("confirm") == "1"
     @State private var logs: [ChangAnAPI.ActionRecord] = []
     @State private var loadingLogs = false
+    @State private var accent = Store.get("accent") ?? "#5B9EFF"
+
+    private let accents: [(String, Color)] = [
+        ("#5B9EFF", Color(red: 0.36, green: 0.62, blue: 1.0)),
+        ("#8B6BFF", Color(red: 0.55, green: 0.42, blue: 0.98)),
+        ("#34C759", Color(red: 0.20, green: 0.78, blue: 0.35)),
+        ("#FF9F0A", Color(red: 1.0, green: 0.62, blue: 0.04)),
+        ("#FF6B81", Color(red: 1.0, green: 0.42, blue: 0.51)),
+        ("#40C8E0", Color(red: 0.25, green: 0.78, blue: 0.88)),
+    ]
 
     var body: some View {
         ZStack {
@@ -61,6 +71,30 @@ struct SettingsView: View {
                         }
                     }
 
+                    GlassCard(padding: 14) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("强调色")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.8))
+                            HStack(spacing: 12) {
+                                ForEach(accents, id: \.0) { item in
+                                    Circle()
+                                        .fill(item.1)
+                                        .frame(width: 26, height: 26)
+                                        .overlay(
+                                            Circle().strokeBorder(
+                                                accent == item.0 ? Color.white : Color.clear,
+                                                lineWidth: 2)
+                                        )
+                                        .onTapGesture {
+                                            accent = item.0
+                                            Store.set(item.0, for: "accent")
+                                        }
+                                }
+                            }
+                        }
+                    }
+
                     operationLogs
 
                     GlassCard(padding: 4) {
@@ -75,7 +109,29 @@ struct SettingsView: View {
                         }
                     }
 
-                    Text("岁岁长安 · iOS 原生版 0.2")
+                    GlassCard(padding: 4) {
+                        Button {
+                            if let u = URL(string: "https://v.douyin.com/V-ceQdCsRA4/") {
+                                UIApplication.shared.open(u)
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "play.rectangle.fill")
+                                    .foregroundStyle(.white.opacity(0.7))
+                                Text("加入抖音群看教程")
+                                    .font(.system(size: 13.5, weight: .medium))
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.white.opacity(0.3))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 13)
+                        }
+                    }
+
+                    Text("岁岁长安 · iOS 原生版 0.3")
                         .font(.system(size: 11))
                         .foregroundStyle(.white.opacity(0.3))
                         .padding(.top, 6)

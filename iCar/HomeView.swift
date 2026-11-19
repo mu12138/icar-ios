@@ -11,6 +11,8 @@ struct HomeView: View {
     @State private var trips: [ChangAnAPI.Trip] = []
     @State private var photos: [ChangAnAPI.PanoPhoto] = []
     @State private var logs: [ChangAnAPI.ActionRecord] = []
+    @State private var showDetail = false
+    @State private var showCabin = false
 
     private var s: CarStatus? { app.status }
 
@@ -20,6 +22,9 @@ struct HomeView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 12) {
+                    if let u = app.update {
+                        UpdateBar(info: u) { app.update = nil }
+                    }
                     brandRow
                     carTitle
                     chips
@@ -38,7 +43,10 @@ struct HomeView: View {
             .refreshable { await reload() }
         }
         .preferredColorScheme(.dark)
-        .task { await reload() }
+        .task {
+            await reload()
+            await app.checkUpdate()
+        }
         .sheet(isPresented: $showSettings) {
             SettingsView().environmentObject(app)
         }
@@ -47,6 +55,12 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showPano) {
             PanoramaView()
+        }
+        .sheet(isPresented: $showDetail) {
+            DetailSheet(s: s)
+        }
+        .sheet(isPresented: $showCabin) {
+            CabinView(speed: Int(s?.speed ?? 0), water: Int(s?.waterTemp ?? 0))
         }
         .alert("确定执行？", isPresented: Binding(
             get: { pending != nil },
@@ -132,6 +146,8 @@ struct HomeView: View {
             if let st = s {
                 CarStageView(modelFile: modelFile, apiData: st.apiData)
                     .frame(height: 210)
+                    .onTapGesture(count: 2) { showDetail = true }
+                    .onLongPressGesture(minimumDuration: 0.8) { showCabin = true }
             } else {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(Color.white.opacity(0.04))

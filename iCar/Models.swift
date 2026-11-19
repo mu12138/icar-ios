@@ -23,6 +23,10 @@ struct CarStatus {
     var engineStatus: Int = 0
     var waterTemp: Double = 0
     var hood: Bool = false
+    var tires: [Double] = [0, 0, 0, 0]     // FL FR RL RR
+    var acWind: String = "0"
+    var subMileage: Double = 0
+    var tripMileage: Double = 0
 
     init() {}
 
@@ -100,6 +104,10 @@ struct CarStatus {
         engineStatus = i("engineStatus")
         waterTemp = db("engineWaterTemp")
         hood = i("hood") == 1
+        tires = [db("lfTyrePressure"), db("rfTyrePressure"),
+                 db("lrTyrePressure"), db("rrTyrePressure")]
+        tripMileage = db("igniteCumulativeMileage")
+        if let air = d["air"] as? [String: Any] { acWind = air["wind"] as? String ?? "0" }
     }
 
     private static let fmt: DateFormatter = {

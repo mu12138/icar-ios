@@ -9,6 +9,7 @@ final class AppModel: ObservableObject {
     @Published var busy = false
     @Published var toast: String?
     @Published var error: String?
+    @Published var update: UpdateCheck.Info?
 
     func sendCode(_ phone: String) async {
         busy = true
@@ -55,6 +56,12 @@ final class AppModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    func checkUpdate() async {
+        guard let info = await UpdateCheck.fetch() else { return }
+        let cur = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
+        if info.code > (Int(cur) ?? 0) { update = info }
     }
 
     func logout() {

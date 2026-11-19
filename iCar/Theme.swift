@@ -2,8 +2,11 @@ import SwiftUI
 
 /// 深色玻璃主题：背景用柔和光斑，卡片用系统材质，模糊才有东西可糊
 enum Theme {
-    static let accent = Color(red: 0.36, green: 0.62, blue: 1.0)
-    static let accent2 = Color(red: 0.55, green: 0.42, blue: 0.98)
+    static var accent: Color {
+        let hex = Store.get("accent") ?? "#5B9EFF"
+        return Color(hex: hex)
+    }
+    static var accent2: Color { accent.opacity(0.72) }
     static let danger = Color(red: 0.95, green: 0.38, blue: 0.36)
     static let bg = Color(red: 0.05, green: 0.06, blue: 0.09)
 }
@@ -140,5 +143,18 @@ struct ToastView: View {
         .overlay(Capsule().strokeBorder((ok ? Color.green : Theme.danger).opacity(0.5), lineWidth: 1))
         .padding(.top, 6)
         .transition(.move(edge: .top).combined(with: .opacity))
+    }
+}
+
+extension Color {
+    /// #RRGGBB 转 Color
+    init(hex: String) {
+        let h = hex.replacingOccurrences(of: "#", with: "")
+        var v: UInt64 = 0
+        Scanner(string: h).scanHexInt64(&v)
+        let r = Double((v >> 16) & 0xFF) / 255
+        let g = Double((v >> 8) & 0xFF) / 255
+        let b = Double(v & 0xFF) / 255
+        self.init(red: r, green: g, blue: b)
     }
 }
