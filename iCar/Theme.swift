@@ -121,3 +121,24 @@ struct StatTile: View {
         }
     }
 }
+
+/// 顶部提示条
+struct ToastView: View {
+    let text: String
+    let ok: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 13, weight: .semibold))
+            Text(text).font(.system(size: 13, weight: .medium))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder((ok ? Color.green : Theme.danger).opacity(0.5), lineWidth: 1))
+        .padding(.top, 6)
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+}
