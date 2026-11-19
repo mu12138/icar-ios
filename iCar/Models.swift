@@ -76,19 +76,22 @@ struct Command: Identifiable {
     let symbol: String
     let cmd: String
     var danger: Bool = false
+    var open: Bool = false   // true = 走开放平台（空调）
 
     static let all: [Command] = [
         .init(title: "解锁", symbol: "lock.open.fill", cmd: "UnLockDoor"),
         .init(title: "锁车", symbol: "lock.fill", cmd: "LockDoor"),
         .init(title: "开窗", symbol: "wind", cmd: "OpenWindow"),
-        .init(title: "关窗", symbol: "wind.circle", cmd: "CloseWindow"),
         .init(title: "留缝", symbol: "rectangle.compress.vertical", cmd: "WindowSlit"),
-        .init(title: "天窗开", symbol: "sun.max", cmd: "OpenDormer"),
-        .init(title: "天窗关", symbol: "sun.min", cmd: "CloseDormer"),
-        .init(title: "寻车", symbol: "location.fill", cmd: "RemoteSearchCar"),
-        .init(title: "闪灯", symbol: "light.max", cmd: "FlashLight"),
+        .init(title: "关窗", symbol: "wind.circle", cmd: "CloseWindow"),
+        .init(title: "天窗翘", symbol: "sun.max", cmd: "SkyWindowLiftUp"),
+        .init(title: "天窗开", symbol: "sun.max.fill", cmd: "OpenDormer"),
+        .init(title: "关天窗", symbol: "sun.min", cmd: "CloseDormer"),
         .init(title: "启动", symbol: "power", cmd: "OpenEngine"),
         .init(title: "熄火", symbol: "power.circle", cmd: "CloseEngine", danger: true),
-        .init(title: "空调", symbol: "snowflake", cmd: "openAir"),
+        .init(title: "开空调", symbol: "snowflake", cmd: "openAir", open: true),
+        .init(title: "关空调", symbol: "snowflake.circle", cmd: "closeAir", open: true),
+        .init(title: "闪灯", symbol: "light.max", cmd: "FlashLight"),
+        .init(title: "寻车", symbol: "location.fill", cmd: "RemoteSearchCar"),
     ]
 }

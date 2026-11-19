@@ -41,11 +41,15 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func run(_ cmd: String) async {
+    func run(_ cmd: String, open: Bool = false) async {
         busy = true
         defer { busy = false }
         do {
-            toast = try await ChangAnAPI.exec(cmd)
+            if open {
+                toast = try await ChangAnAPI.openExec(cmd)
+            } else {
+                toast = try await ChangAnAPI.exec(cmd)
+            }
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             await refresh()
         } catch {

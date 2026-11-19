@@ -9,7 +9,7 @@ enum ChangAnAPI {
 
     // MARK: - 底层请求
 
-    private static func send(_ urlString: String,
+    static func send(_ urlString: String,
                              method: String = "GET",
                              form: [String: String]? = nil) async throws -> Data {
         guard let url = URL(string: urlString) else { throw APIError.bad("地址错误") }
@@ -34,7 +34,7 @@ enum ChangAnAPI {
         return data
     }
 
-    private static func esc(_ s: String) -> String {
+    static func esc(_ s: String) -> String {
         var allowed = CharacterSet.alphanumerics
         allowed.insert(charactersIn: "-._~")
         return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s

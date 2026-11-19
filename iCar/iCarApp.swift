@@ -6,13 +6,7 @@ struct iCarApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if app.loggedIn {
-                    HomeView().environmentObject(app)
-                } else {
-                    LoginView().environmentObject(app)
-                }
-            }
+            RootView().environmentObject(app)
         }
     }
 }
