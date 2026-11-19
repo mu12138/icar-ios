@@ -16,6 +16,10 @@ targets:
       - path: iCar
         excludes:
           - Info.plist
+          - CarWeb
+      - path: iCar/CarWeb
+        type: folder
+        buildPhase: resources
     info:
       path: iCar/Info.plist
       properties:

@@ -18,8 +18,44 @@ struct CarStatus {
     var windows: [Bool] = [false, false, false, false]
     var sunroof: Bool = false
     var trunk: Bool = false
+    var fuel100: Double = 0
+    var oilTrip: Double = 0
+    var engineStatus: Int = 0
+    var waterTemp: Double = 0
+    var hood: Bool = false
 
     init() {}
+
+    /// 平均油耗（L/100km），车端除零兜底会给 25.5，按假值处理
+    var avgOilText: String {
+        if fuel100 > 0 && abs(fuel100 - 25.5) < 0.05 { return "--" }
+        return fuel100 > 0 ? String(format: "%.1f", fuel100) : "--"
+    }
+
+    /// 给 3D 车模用的字段（和 Android 的 app.js 映射一致）
+    var apiData: [String: Any] {
+        [
+            "driverDoorLock": locked ? 1 : 0,
+            "passengerDoorLock": locked ? 1 : 0,
+            "leftRearDoorLock": locked ? 1 : 0,
+            "rightRearDoorLock": locked ? 1 : 0,
+            "leftFrontDoor": doors[0] ? 1 : 0,
+            "rightFrontDoor": doors[1] ? 1 : 0,
+            "leftRearDoor": doors[2] ? 1 : 0,
+            "rightRearDoor": doors[3] ? 1 : 0,
+            "diverWindow": windows[0] ? 1 : 0,
+            "passengerWindow": windows[1] ? 1 : 0,
+            "leftRearWindow": windows[2] ? 1 : 0,
+            "rightRearWindow": windows[3] ? 1 : 0,
+            "sunroof": sunroof ? 1 : 0,
+            "trunk": trunk ? 1 : 0,
+            "hood": hood ? 1 : 0,
+            "engineStatus": engineStatus,
+            "airStatus": acOn ? 1 : 0,
+            "speed": speed,
+            "waterTemp": waterTemp,
+        ]
+    }
 
     init(raw d: [String: Any]) {
         func i(_ k: String) -> Int { (d[k] as? NSNumber)?.intValue ?? 0 }
@@ -59,6 +95,11 @@ struct CarStatus {
                    i("leftRearWindow") == 1, i("rightRearWindow") == 1]
         sunroof = i("sunroof") == 1
         trunk = i("trunk") == 1
+        fuel100 = db("fuelConsumption100km")
+        oilTrip = db("igniteCumulativeOil")
+        engineStatus = i("engineStatus")
+        waterTemp = db("engineWaterTemp")
+        hood = i("hood") == 1
     }
 
     private static let fmt: DateFormatter = {
