@@ -22,7 +22,7 @@ struct CabinView: View {
                 Spacer()
 
                 VStack(spacing: 8) {
-                    DotText(String(speed), dotSize: 7, spacing: 5)
+                    DotText(text: String(speed), dotSize: 7, spacing: 5)
                         .frame(height: 60)
                     Text("km/h")
                         .font(.system(size: 12, weight: .medium))
@@ -30,7 +30,7 @@ struct CabinView: View {
                 }
 
                 VStack(spacing: 8) {
-                    DotText("\(water)", dotSize: 4.5, spacing: 3)
+                    DotText(text: "\(water)", dotSize: 4.5, spacing: 3)
                         .frame(height: 36)
                     Text("℃")
                         .font(.system(size: 11))
