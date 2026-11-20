@@ -62,8 +62,8 @@ struct CarStatus {
     }
 
     init(raw d: [String: Any]) {
-        func i(_ k: String) -> Int { (d[k] as? NSNumber)?.intValue ?? 0 }
-        func db(_ k: String) -> Double { (d[k] as? NSNumber)?.doubleValue ?? 0 }
+        func i(_ k: String) -> Int { Int(num(d[k])) }
+        func db(_ k: String) -> Double { num(d[k]) }
 
         // 油量优先用升数换算，remainingFuel 在部分车上恒为 100
         let liters = db("fuelLeftover")

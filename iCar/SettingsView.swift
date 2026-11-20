@@ -7,6 +7,8 @@ struct SettingsView: View {
     @State private var logs: [ChangAnAPI.ActionRecord] = []
     @State private var loadingLogs = false
     @State private var accent = Store.get("accent") ?? "#5B9EFF"
+    @State private var showDebug = false
+    @ObservedObject private var log = DebugLog.shared
 
     private let accents: [(String, Color)] = [
         ("#5B9EFF", Color(red: 0.36, green: 0.62, blue: 1.0)),
@@ -110,6 +112,27 @@ struct SettingsView: View {
                     }
 
                     GlassCard(padding: 4) {
+                        Button { showDebug = true } label: {
+                            HStack {
+                                Image(systemName: "ladybug.fill")
+                                    .foregroundStyle(.white.opacity(0.7))
+                                Text("调试信息")
+                                    .font(.system(size: 13.5, weight: .medium))
+                                    .foregroundStyle(.white)
+                                Spacer()
+                                Text("\(log.lines.count) 条")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.white.opacity(0.35))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.white.opacity(0.3))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 13)
+                        }
+                    }
+
+                    GlassCard(padding: 4) {
                         Button {
                             if let u = URL(string: "https://v.douyin.com/V-ceQdCsRA4/") {
                                 UIApplication.shared.open(u)
@@ -143,6 +166,29 @@ struct SettingsView: View {
         }
         .preferredColorScheme(.dark)
         .task { await loadLogs() }
+        .sheet(isPresented: $showDebug) {
+            NavigationStack {
+                ScrollView {
+                    Text(log.text.isEmpty ? "还没有日志，先回首页刷新一次车况" : log.text)
+                        .font(.system(size: 10.5, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                }
+                .background(Color.black)
+                .navigationTitle("调试信息")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("清空") { log.clear() }
+                    }
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("关闭") { showDebug = false }
+                    }
+                }
+            }
+            .preferredColorScheme(.dark)
+        }
     }
 
     private var operationLogs: some View {

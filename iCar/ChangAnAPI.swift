@@ -28,8 +28,12 @@ enum ChangAnAPI {
                 .data(using: .utf8)
         }
         let (data, resp) = try await URLSession.shared.data(for: req)
-        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw APIError.bad("服务端返回异常")
+        let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        let body = String(data: data, encoding: .utf8) ?? ""
+        let short = urlString.replacingOccurrences(of: base, with: "")
+        DebugLog.shared.add("\(method) \(short.prefix(90)) → \(code) \(body.prefix(120))")
+        guard (200..<300).contains(code) else {
+            throw APIError.bad("服务端返回 \(code)")
         }
         return data
     }
@@ -80,7 +84,11 @@ enum ChangAnAPI {
     static func refreshCarMeta() async throws {
         let j = try await getJSON("/app2/api/user/cars?type=0&token=TOKEN")
         let arr = (j["data"] as? [[String: Any]]) ?? []
-        guard let car = arr.first else { return }
+        DebugLog.shared.add("车辆列表 code=\(j["code"] ?? "-") 数量=\(arr.count)")
+        guard let car = arr.first else {
+            DebugLog.shared.add("⚠️ 车辆列表为空，carId 没拿到")
+            return
+        }
         Store.set(car["carId"] as? String ?? "", for: "carId")
         Store.set(car["carName"] as? String ?? car["seriesName"] as? String ?? "我的车", for: "carName")
         Store.set(car["seriesName"] as? String ?? "", for: "seriesName")
@@ -139,7 +147,11 @@ enum ChangAnAPI {
         let carId = Store.get("carId") ?? ""
         guard !carId.isEmpty else { throw APIError.bad("未绑定车辆") }
         let j = try await getJSON("/app2/api/car/data?carId=\(carId)&keys=*&isNev=0&token=TOKEN")
-        guard let d = j["data"] as? [String: Any] else { throw APIError.bad("车况为空") }
+        guard let d = j["data"] as? [String: Any] else {
+            DebugLog.shared.add("⚠️ 车况为空 code=\(j["code"] ?? "-") msg=\(j["msg"] ?? "-")")
+            throw APIError.bad("车况为空")
+        }
+        DebugLog.shared.add("车况字段数 \(d.count)")
         return CarStatus(raw: d)
     }
 
