@@ -17,6 +17,21 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 - 360 全景：查看、车外拍照、长按删除（服务端）/ 隐藏（本机）
 - 设置：控车码、二次确认、操作记录、退出登录
 
+## 更新记录
+
+### v0.7 (6)
+- 修 3D 车模加载不出来：WKWebView 用 file:// 打开时，three.js 的 GLTFLoader/RGBELoader
+  走 fetch 会被 WebKit 拦掉，表现为「有背景、中间是空的」。改成内置本机 HTTP 服务
+  （`CarWebServer`，Network.framework，127.0.0.1 随机端口）喂 three.js，和安卓同一套做法。
+  Info.plist 加了 127.0.0.1 / localhost 的 ATS 例外。
+- 控车指令加即时反馈：点下去立刻显示「正在下发 · 解锁」，5 秒没回来改「等待车端确认」，
+  失败时明确显示「解锁 失败：原因」，不再出现点了没反应也没提示的情况。
+- 指令全过程写进「调试信息」，方便排查。
+- 修版本号：之前 Info.plist 里写死 0.3/1，导致更新提示一直误报；现在和 project.yml 同步。
+
+### v0.5 (4)
+- 内部测试版，版本号有误，已删除。
+
 ## 怎么编译
 
 没有 Mac 也能编，用 GitHub Actions 的免费 macOS 机器。
