@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var app: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var pin = Store.get("pinCode") ?? ""
     @State private var confirm = Store.get("confirm") == "1"
     @State private var logs: [ChangAnAPI.ActionRecord] = []
@@ -30,6 +31,7 @@ struct SettingsView: View {
                             .font(.system(size: 22, weight: .bold))
                             .foregroundStyle(.white)
                         Spacer()
+                        CloseButton { dismiss() }
                     }
                     .padding(.top, 8)
 
@@ -154,7 +156,7 @@ struct SettingsView: View {
                         }
                     }
 
-                    Text("岁岁长安 · iOS 原生版 0.3")
+                    Text("岁岁长安 · iOS 原生版 \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")")
                         .font(.system(size: 11))
                         .foregroundStyle(.white.opacity(0.3))
                         .padding(.top, 6)

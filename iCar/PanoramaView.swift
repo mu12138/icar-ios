@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PanoramaView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var photos: [ChangAnAPI.PanoPhoto] = []
     @State private var loading = false
     @State private var capturing = false
@@ -44,6 +45,7 @@ struct PanoramaView: View {
                             .foregroundStyle(Theme.accent)
                         }
                         .disabled(capturing)
+                        CloseButton { dismiss() }
                     }
                     .padding(.top, 8)
 

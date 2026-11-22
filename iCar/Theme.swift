@@ -158,3 +158,21 @@ extension Color {
         self.init(red: r, green: g, blue: b)
     }
 }
+
+/// 二级页右上角的通用关闭按钮：一个 X，点了 dismiss。
+/// iOS 的 sheet 虽然能下滑关，但不少人不熟；显式给个按钮，别让人卡在二级页里。
+struct CloseButton: View {
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 12, weight: .bold))
+                .frame(width: 30, height: 30)
+                .background(.ultraThinMaterial, in: Circle())
+                .foregroundStyle(.white.opacity(0.85))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("关闭")
+    }
+}

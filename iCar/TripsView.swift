@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TripsView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var trips: [ChangAnAPI.Trip] = []
     @State private var days = 1
     @State private var loading = false
@@ -25,6 +26,7 @@ struct TripsView: View {
                         .pickerStyle(.segmented)
                         .frame(width: 190)
                         .onChange(of: days) { _, _ in Task { await load() } }
+                        CloseButton { dismiss() }
                     }
                     .padding(.top, 8)
 

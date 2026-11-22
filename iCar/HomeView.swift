@@ -49,18 +49,23 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showSettings) {
             SettingsView().environmentObject(app)
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showTrips) {
             TripsView()
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showPano) {
             PanoramaView()
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showDetail) {
             DetailSheet(s: s)
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showCabin) {
             CabinView(speed: Int(s?.speed ?? 0), water: Int(s?.waterTemp ?? 0))
+                .presentationDragIndicator(.visible)
         }
         .alert("确定执行？", isPresented: Binding(
             get: { pending != nil },

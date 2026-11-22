@@ -27,8 +27,8 @@ targets:
         CFBundleDevelopmentRegion: zh_CN
         # 版本号：和下面的 MARKETING_VERSION / CURRENT_PROJECT_VERSION 保持一致
         # （release-ios.sh 会一起改，别只改一处）
-        CFBundleShortVersionString: "0.8"
-        CFBundleVersion: "7"
+        CFBundleShortVersionString: "0.9"
+        CFBundleVersion: "8"
         UILaunchScreen: {}
         UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations:
@@ -47,8 +47,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cn.icar.native
         PRODUCT_NAME: iCar
-        MARKETING_VERSION: "0.8"
-        CURRENT_PROJECT_VERSION: "7"
+        MARKETING_VERSION: "0.9"
+        CURRENT_PROJECT_VERSION: "8"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Manual
         CODE_SIGNING_REQUIRED: "NO"
