@@ -25,7 +25,10 @@ targets:
       properties:
         CFBundleDisplayName: 岁岁长安
         CFBundleDevelopmentRegion: zh_CN
-        # 版本号不要写死：交给 XcodeGen 用 MARKETING_VERSION / CURRENT_PROJECT_VERSION
+        # 版本号：和下面的 MARKETING_VERSION / CURRENT_PROJECT_VERSION 保持一致
+        # （release-ios.sh 会一起改，别只改一处）
+        CFBundleShortVersionString: "0.7"
+        CFBundleVersion: "6"
         UILaunchScreen: {}
         UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations:
@@ -44,8 +47,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cn.icar.native
         PRODUCT_NAME: iCar
-        MARKETING_VERSION: "0.6"
-        CURRENT_PROJECT_VERSION: "5"
+        MARKETING_VERSION: "0.7"
+        CURRENT_PROJECT_VERSION: "6"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Manual
         CODE_SIGNING_REQUIRED: "NO"

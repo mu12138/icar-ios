@@ -17,7 +17,9 @@ if [ $# -ge 1 ]; then
   OLD_BUILD=$(sed -n 's/.*CURRENT_PROJECT_VERSION: "\([0-9]*\)".*/\1/p' project.yml | head -1)
   NEW_BUILD=$(( ${OLD_BUILD:-0} + 1 ))
   sed -i -e "s/MARKETING_VERSION: \"[^\"]*\"/MARKETING_VERSION: \"$NEW\"/" \
-         -e "s/CURRENT_PROJECT_VERSION: \"[0-9]*\"/CURRENT_PROJECT_VERSION: \"$NEW_BUILD\"/" project.yml
+         -e "s/CURRENT_PROJECT_VERSION: \"[0-9]*\"/CURRENT_PROJECT_VERSION: \"$NEW_BUILD\"/" \
+         -e "s/CFBundleShortVersionString: \"[^\"]*\"/CFBundleShortVersionString: \"$NEW\"/" \
+         -e "s/CFBundleVersion: \"[0-9]*\"/CFBundleVersion: \"$NEW_BUILD\"/" project.yml
 fi
 
 VER=$(sed -n 's/.*MARKETING_VERSION: "\([^"]*\)".*/\1/p' project.yml | head -1)
