@@ -42,19 +42,33 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func run(_ cmd: String, open: Bool = false) async {
+    func run(_ cmd: String, title: String = "", open: Bool = false) async {
+        if busy { return }
         busy = true
         defer { busy = false }
+        let name = title.isEmpty ? cmd : title
+        // 先给个即时反馈，别让用户以为没点上
+        error = nil
+        toast = "正在下发 · \(name)"
+        DebugLog.shared.add("指令 \(cmd) 开始下发")
+        // 5 秒还没回来就提示一句，长轮询时界面不会像卡死
+        let hint = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if !Task.isCancelled, self.busy { self.toast = "等待车端确认 · \(name)" }
+        }
         do {
-            if open {
-                toast = try await ChangAnAPI.openExec(cmd)
-            } else {
-                toast = try await ChangAnAPI.exec(cmd)
-            }
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            let r = try await (open ? ChangAnAPI.openExec(cmd) : ChangAnAPI.exec(cmd))
+            hint.cancel()
+            DebugLog.shared.add("指令 \(cmd) 返回：\(r)")
+            toast = "\(name) · \(r)"
+            try? await Task.sleep(nanoseconds: 800_000_000)
             await refresh()
         } catch {
-            self.error = error.localizedDescription
+            hint.cancel()
+            let msg = error.localizedDescription
+            DebugLog.shared.add("指令 \(cmd) 失败：\(msg)")
+            self.error = "\(name) 失败：\(msg)"
+            toast = nil
         }
     }
 

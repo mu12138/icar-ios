@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# 构建 iOS 未签名 ipa 并同步到夸克网盘
+#
+#   ./release-ios.sh           用 project.yml 里现在的版本构建
+#   ./release-ios.sh 0.5       先升到 0.5（CURRENT_PROJECT_VERSION 自动 +1）
+#
+# 流程：推 main → GitHub Actions 跑 macos-15 → 下载 ipa → 存 分享/ 和 夸克「iOS 测试版」
+set -euo pipefail
+PROJ="$(cd "$(dirname "$0")" && pwd)"
+QUARK="/1000-1-e8adecdf/iOS 测试版"
+SHARE="/1000/AI/icar-mod/分享"
+
+cd "$PROJ"
+
+if [ $# -ge 1 ]; then
+  NEW="$1"
+  OLD_BUILD=$(sed -n 's/.*CURRENT_PROJECT_VERSION: "\([0-9]*\)".*/\1/p' project.yml | head -1)
+  NEW_BUILD=$(( ${OLD_BUILD:-0} + 1 ))
+  sed -i -e "s/MARKETING_VERSION: \"[^\"]*\"/MARKETING_VERSION: \"$NEW\"/" \
+         -e "s/CURRENT_PROJECT_VERSION: \"[0-9]*\"/CURRENT_PROJECT_VERSION: \"$NEW_BUILD\"/" project.yml
+fi
+
+VER=$(sed -n 's/.*MARKETING_VERSION: "\([^"]*\)".*/\1/p' project.yml | head -1)
+BUILD=$(sed -n 's/.*CURRENT_PROJECT_VERSION: "\([0-9]*\)".*/\1/p' project.yml | head -1)
+echo "== iOS v$VER ($BUILD) =="
+
+git add -A
+if ! git diff --cached --quiet; then
+  git commit -q -m "v$VER ($BUILD)"
+fi
+git push -q origin main
+
+# 等这次推送触发的 run（按 commit sha 匹配，避免抓到上一次的 run）
+SHA=$(git rev-parse HEAD)
+RUN=""
+for i in $(seq 1 30); do
+  RUN=$(gh run list --limit 20 --json databaseId,headSha -q ".[] | select(.headSha==\"$SHA\") | .databaseId" | head -1)
+  [ -n "$RUN" ] && break
+  sleep 4
+done
+[ -z "$RUN" ] && { echo "没等到 Actions run（sha=$SHA）"; exit 1; }
+echo "run=$RUN"
+gh run watch "$RUN" --exit-status >/dev/null || { gh run view "$RUN" --log-failed | tail -40; exit 1; }
+
+TMP=/tmp/ios-ipa-$BUILD
+rm -rf "$TMP"; mkdir -p "$TMP"
+gh run download "$RUN" -n iCar-unsigned-ipa -D "$TMP"
+
+NAME="岁岁长安-iOS原生-v${VER}-unsigned.ipa"
+cp "$TMP/iCar-unsigned.ipa" "$SHARE/$NAME"
+mkdir -p "$QUARK"
+cp "$TMP/iCar-unsigned.ipa" "$QUARK/$NAME"
+sync
+
+echo "== 完成 =="
+ls -lh "$SHARE/$NAME" "$QUARK/$NAME"

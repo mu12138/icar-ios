@@ -70,7 +70,7 @@ struct HomeView: View {
             Button("执行") {
                 let cmd = c
                 pending = nil
-                Task { await app.run(cmd.cmd, open: cmd.open) }
+                Task { await app.run(cmd.cmd, title: cmd.title, open: cmd.open) }
             }
         } message: { c in
             Text("「\(c.title)」会立刻下发到车端")
@@ -376,7 +376,7 @@ struct HomeView: View {
 
     private func fire(_ c: Command) {
         if confirmOn { pending = c }
-        else { Task { await app.run(c.cmd, open: c.open) } }
+        else { Task { await app.run(c.cmd, title: c.title, open: c.open) } }
     }
 
     private func reload() async {

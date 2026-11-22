@@ -18,16 +18,11 @@ struct CarStageView: UIViewRepresentable {
         wv.scrollView.backgroundColor = .clear
         wv.scrollView.isUserInteractionEnabled = true
 
-        guard let url = Bundle.main.url(forResource: "carview", withExtension: "html",
-                                        subdirectory: "CarWeb") else {
-            return wv
-        }
-        var comp = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        comp?.queryItems = [URLQueryItem(name: "model", value: modelFile)]
-        if let u = comp?.url {
-            wv.loadFileURL(u, allowingReadAccessTo: url.deletingLastPathComponent())
-        }
         context.coordinator.web = wv
+        context.coordinator.modelFile = modelFile
+        // 走本机 HTTP 服务：file:// 下 three.js 的 fetch 会被 WebKit 拦掉，车模加载不出来
+        CarWebServer.shared.start()
+        context.coordinator.load(wv)
         return wv
     }
 
@@ -37,7 +32,23 @@ struct CarStageView: UIViewRepresentable {
 
     final class Coordinator {
         weak var web: WKWebView?
+        var modelFile: String = "C211.glb"
         private var lastJSON = ""
+        private var tries = 0
+
+        /// 服务端口可能还没就绪，最多等 2 秒
+        func load(_ wv: WKWebView) {
+            if let u = CarWebServer.shared.pageURL(model: modelFile) {
+                wv.load(URLRequest(url: u))
+                return
+            }
+            tries += 1
+            if tries > 20 { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                guard let self = self else { return }
+                self.load(wv)
+            }
+        }
 
         func push(_ data: [String: Any]) {
             guard let wv = web else { return }
