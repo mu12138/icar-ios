@@ -184,9 +184,17 @@ enum ChangAnAPI {
 
     // MARK: - 下发指令
 
-    /// 返回执行结果文字
+    /// 下发 + 轮询一步到位（旧调用方式，车外拍照等还在用）
     @discardableResult
     static func exec(_ cmd: String, extra: [String: String] = [:]) async throws -> String {
+        let taskId = try await dispatch(cmd, extra: extra)
+        guard !taskId.isEmpty else { return "已下发" }
+        return try await pollResult(taskId)
+    }
+
+    /// 只负责把指令发出去，返回 taskId（可能为空）。
+    /// 拆出来是为了界面能在下发成功那一刻就亮「已下发」，不再干等轮询。
+    static func dispatch(_ cmd: String, extra: [String: String] = [:]) async throws -> String {
         try await ensureToken()
         let token = Store.get("token") ?? ""
         let carId = Store.get("carId") ?? ""
@@ -236,23 +244,29 @@ enum ChangAnAPI {
             throw APIError.bad(execJ["msg"] as? String ?? "指令发送失败")
         }
 
-        // 5. 轮询结果
-        guard let d = execJ["data"] as? [String: Any],
-              let taskId = d["taskId"] as? String, !taskId.isEmpty else {
-            return "已下发"
-        }
+        return (execJ["data"] as? [String: Any])?["taskId"] as? String ?? ""
+    }
+
+    /// 轮询车端回执：完成 / 失败 / 20 秒超时。
+    /// 状态值大小写、Success/Completed 混用都认，别因为拼写对不上就一直干等。
+    static func pollResult(_ taskId: String) async throws -> String {
+        let token = Store.get("token") ?? ""
+        let carId = Store.get("carId") ?? ""
         for _ in 0..<40 {
             try await Task.sleep(nanoseconds: 500_000_000)
             let stData = try await send("\(base)/api/car/getControlInfo", method: "POST",
                                         form: ["token": token, "carId": carId, "id": taskId, "isNev": "0"])
             let stJ = try json(stData)
-            if codeInt(stJ) == 0, let dd = stJ["data"] as? [String: Any] {
-                switch dd["handleStatus"] as? String {
-                case "Completed": return "成功"
-                case "Failed": throw APIError.bad(dd["handleStatusDesc"] as? String ?? "执行失败")
-                default: continue
-                }
-            }
+            guard codeInt(stJ) == 0, let dd = stJ["data"] as? [String: Any] else { continue }
+            let hs = ((dd["handleStatus"] as? String) ?? "").lowercased()
+            let rawDesc = (dd["handleStatusDesc"] as? String) ?? (dd["resultDesc"] as? String) ?? ""
+            let desc = rawDesc.count > 40 ? String(rawDesc.prefix(40)) : rawDesc
+            if hs.contains("complete") || hs.contains("success") { return "成功" }
+            // 车端明确失败/超时/离线就别再干等 20 秒
+            if hs.contains("fail") { throw APIError.bad(desc.isEmpty ? "车端执行失败" : desc) }
+            if hs.contains("timeout") { throw APIError.bad(desc.isEmpty ? "车端超时未响应" : desc) }
+            if hs.contains("offline") { throw APIError.bad(desc.isEmpty ? "车辆离线" : desc) }
+            // Initialized / Runing 这类中间态继续轮询
         }
         return "已下发（状态超时）"
     }

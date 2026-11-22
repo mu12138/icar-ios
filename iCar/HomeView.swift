@@ -397,11 +397,12 @@ struct HomeView: View {
     }
 
     private func clearSoon(_ v: String?) {
-        guard v != nil else { return }
+        // 只清自己这条：之前不管内容到点就清，旧定时器会把新提示（比如「成功」）提前抹掉
+        guard let v else { return }
         Task {
-            try? await Task.sleep(nanoseconds: 2_400_000_000)
-            app.toast = nil
-            app.error = nil
+            try? await Task.sleep(nanoseconds: 2_600_000_000)
+            if app.toast == v { app.toast = nil }
+            if app.error == v { app.error = nil }
         }
     }
 }

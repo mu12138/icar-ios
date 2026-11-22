@@ -51,13 +51,30 @@ final class AppModel: ObservableObject {
         error = nil
         toast = "正在下发 · \(name)"
         DebugLog.shared.add("指令 \(cmd) 开始下发")
-        // 5 秒还没回来就提示一句，长轮询时界面不会像卡死
+        // 网络慢时给个「还在下发」的提示；拿到结果就立刻撤掉，绝不让它盖住后面的状态
         let hint = Task {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
-            if !Task.isCancelled, self.busy { self.toast = "等待车端确认 · \(name)" }
+            if !Task.isCancelled, self.busy,
+               self.toast == nil || self.toast == "正在下发 · \(name)" {
+                self.toast = "下发中，网络慢 · \(name)"
+            }
         }
         do {
-            let r = try await (open ? ChangAnAPI.openExec(cmd) : ChangAnAPI.exec(cmd))
+            let r: String
+            if open {
+                r = try await ChangAnAPI.openExec(cmd)
+            } else {
+                // 先只下发：成功发出就马上亮「已下发」，再慢慢等车端回执
+                let taskId = try await ChangAnAPI.dispatch(cmd)
+                hint.cancel()
+                DebugLog.shared.add("指令 \(cmd) 已下发 taskId=\(taskId.isEmpty ? "-" : taskId)")
+                toast = "已下发 · \(name)，等车端回执"
+                if taskId.isEmpty {
+                    r = "已下发"
+                } else {
+                    r = try await ChangAnAPI.pollResult(taskId)
+                }
+            }
             hint.cancel()
             DebugLog.shared.add("指令 \(cmd) 返回：\(r)")
             toast = "\(name) · \(r)"
