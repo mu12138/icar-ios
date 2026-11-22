@@ -30,7 +30,12 @@ git add -A
 if ! git diff --cached --quiet; then
   git commit -q -m "v$VER ($BUILD)"
 fi
-git push -q origin main
+# GitHub 偶尔 TLS 断（GnuTLS recv error），重试几次
+for i in 1 2 3; do
+  git push -q origin main && break
+  [ "$i" = 3 ] && { echo "push 失败（试了 3 次）"; exit 1; }
+  sleep 3
+done
 
 # 等这次推送触发的 run（按 commit sha 匹配，避免抓到上一次的 run）
 SHA=$(git rev-parse HEAD)
