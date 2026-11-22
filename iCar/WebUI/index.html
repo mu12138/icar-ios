@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#08090d">
+<title>岁岁长安</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="booting">
+<div class="bg"></div>
+<div id="bg-img"></div>
+<div id="bg-shade"></div>
+
+<!-- ================= 车控主页 ================= -->
+<div id="app" class="page hidden">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>岁岁长安</div>
+    <div class="right">
+      <div class="iconbtn" id="btn-refresh" title="刷新">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 5v6h-6"/>
+        </svg>
+      </div>
+      <div class="iconbtn" id="btn-more" title="更多">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="carname" id="car-name">逸动 PLUS</div>
+  <div class="carsub">
+    <span class="chip" id="chip-lock">读取中…</span>
+    <span class="chip" id="chip-online">在线</span>
+    <span class="chip" id="chip-time">--</span>
+    <span class="chip odo" id="chip-odo">--</span>
+  </div>
+  <div class="flags hide" id="car-flags"></div>
+
+  <div class="stage">
+    <canvas id="vehicle-3d"></canvas>
+    <div class="cam-blur" id="cam-blur"></div>
+    <div class="overlay" id="overlay"></div>
+    <div class="hint" id="stage-hint">拖动旋转 · 点击俯视看胎压</div>
+  </div>
+
+  <div class="cabin-data hide" id="cabin-data">
+    <div class="cd-top">
+      <div class="cd-speed"><span class="dots" id="cd-speed"></span><i>km/h</i></div>
+      <div class="cd-water-wrap">
+        <div class="cd-water"><span class="dots" id="cd-water"></span><i>℃</i></div>
+        <div class="cd-wbar" id="cd-wbar"></div>
+      </div>
+    </div>
+    <div class="cd-bar" id="cd-bar"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat fuel tg" id="stat-fuel">
+      <i class="mi ico" style="-webkit-mask-image:url(xm/fuel.png);mask-image:url(xm/fuel.png)"></i>
+      <div class="v" id="s-fuel">--<small class="u" id="s-fuel-u">%</small></div>
+      <div class="k">剩余油量</div>
+      <div class="bar"><i id="s-fuel-bar" style="width:0%"></i></div>
+    </div>
+    <div class="stat tg" id="stat-range">
+      <i class="mi ico" style="-webkit-mask-image:url(xm/range.png);mask-image:url(xm/range.png)"></i>
+      <div class="v" id="s-range">--<small>km</small></div>
+      <div class="k" id="s-range-k">续航里程</div>
+    </div>
+    <div class="stat tg" id="stat-oil">
+      <div class="st-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4.5" width="9" height="15" rx="2"/><path d="M5.5 7.5h4"/>
+          <path d="M12 9h3.2a2 2 0 0 1 2 2v6.4a1.6 1.6 0 0 0 3.2 0V9.6L17.6 6.5"/>
+        </svg>
+      </div>
+      <div class="v" id="s-oil">--<small>L</small></div>
+      <div class="k" id="s-oil-k">平均油耗</div>
+    </div>
+    <div class="stat tg" id="stat-temp">
+      <div class="st-top">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 14.6V5a2 2 0 1 0-4 0v9.6a4 4 0 1 0 4 0z"/><path d="M12 9.4v5.4"/>
+        </svg>
+      </div>
+      <div class="v" id="s-temp">--<small>℃</small></div>
+      <div class="k" id="s-temp-k">车外温度</div>
+    </div>
+  </div>
+
+  <div class="grabber" id="grab"><i></i></div>
+  <div class="more" id="more"></div>
+
+  <div class="sec">
+    <h2>快捷控制</h2>
+    <div class="sec-right">
+      <span id="grid-tip">点击即执行</span>
+      <button class="mini-btn" id="grid-sort">排序</button>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="ac" id="ac">
+    <div class="ac-hd">
+      <div class="ac-title">空调 <span id="ac-state">已关闭</span></div>
+      <button class="ac-power" id="ac-power">开启</button>
+    </div>
+    <div class="ac-main">
+      <div class="ac-val"><span id="ac-temp">--</span><small>℃</small></div>
+      <div class="ac-k2">车内温度</div>
+    </div>
+    <div class="ac-sub" id="ac-sub">设定 --℃ · 车外 --℃</div>
+    <div class="ac-note" id="ac-note"></div>
+    <div class="ac-hint" id="ac-hint"></div>
+  </div>
+
+  <div id="sec-pano">
+  <div class="sec"><h2 id="pano-title">360 全景</h2><span id="pano-time">读取中…</span></div>
+  <div class="pano">
+    <div class="pano-grid" id="pano-grid">
+      <div class="pano-empty">暂无照片，点下面拍一张</div>
+    </div>
+    <div class="pano-bar">
+      <button class="pano-btn" id="btn-capture">车外拍照</button>
+      <div class="pano-more" id="btn-all">全部照片</div>
+    </div>
+  </div>
+  </div>
+
+  <div class="card" id="card-trip" data-sec="trip">
+    <div class="lead">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 18.5c3-6 5-2 8-7s5-1 8-6"/><circle cx="4" cy="18.5" r="1.8"/><circle cx="20" cy="5.5" r="1.8"/>
+      </svg>
+    </div>
+    <div class="body">
+      <div class="t1">我的轨迹</div>
+      <div class="t2" id="trip-sub">读取中…</div>
+    </div>
+    <div class="end">查看</div>
+  </div>
+
+  <div class="card" id="card-log" data-sec="log">
+    <div class="lead">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18V6A1.5 1.5 0 0 1 5 4.5z"/>
+        <path d="M7.5 9h9M7.5 12.5h9M7.5 16h5"/>
+      </svg>
+    </div>
+    <div class="body">
+      <div class="t1">操作记录</div>
+      <div class="t2" id="log-sub">最近 20 条远程指令</div>
+    </div>
+    <div class="end">查看</div>
+  </div>
+
+  <div class="card" id="card-loc" data-sec="loc">
+    <div class="lead">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>
+      </svg>
+    </div>
+    <div class="body">
+      <div class="t1" id="loc-title">车辆位置</div>
+      <div class="t2" id="loc-sub">--</div>
+    </div>
+    <div class="end">查看</div>
+  </div>
+
+  <div class="foot">
+    <div id="foot-sync">--</div>
+    <div><a href="#" id="btn-logout">退出登录</a></div>
+  </div>
+</div>
+
+<!-- ================= 登录页 ================= -->
+<div id="login" class="page login">
+  <div class="logo">岁岁长安</div>
+  <div class="sub">登录长安车主账号，即可在本机远程控制车辆。<br>登录态只保存在这台手机上。</div>
+
+  <div class="field">
+    <input id="phone" type="tel" inputmode="numeric" maxlength="11" placeholder="手机号">
+  </div>
+  <div class="field">
+    <input id="code" type="number" inputmode="numeric" maxlength="6" placeholder="短信验证码">
+    <div class="mini" id="btn-code">获取验证码</div>
+  </div>
+  <button class="btn" id="btn-login">登录并绑定车辆</button>
+
+  <div class="foot">接口来自长安官方开放平台，不经过任何第三方服务器</div>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-hd">
+    <span>360 全景照片</span>
+    <span class="sheet-x" id="sheet-x">关闭</span>
+  </div>
+  <div class="sheet-bd" id="sheet-bd"></div>
+</div>
+
+
+<div class="sheet" id="trip-sheet">
+  <div class="sheet-hd">
+    <span>我的轨迹</span>
+    <span class="sheet-x" id="trip-x">关闭</span>
+  </div>
+  <div class="trip-bar">
+    <button class="trip-nav" id="trip-prev">‹</button>
+    <div class="trip-date" id="trip-date">--</div>
+    <button class="trip-nav" id="trip-next">›</button>
+  </div>
+  <div class="sheet-bd" id="trip-bd"></div>
+</div>
+
+<div class="sheet" id="log-sheet">
+  <div class="sheet-hd">
+    <span>操作记录</span>
+    <span class="sheet-x" id="log-x">关闭</span>
+  </div>
+  <div class="sheet-bd" id="log-bd"></div>
+</div>
+
+<div class="sheet" id="loc-sheet">
+  <div class="sheet-hd">
+    <span>车辆位置</span>
+    <span class="sheet-x" id="loc-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="loc-addr" id="loc-addr">读取中…</div>
+    <div class="loc-grid">
+      <div class="loc-cell"><span>经度</span><b id="loc-lng">--</b></div>
+      <div class="loc-cell"><span>纬度</span><b id="loc-lat">--</b></div>
+      <div class="loc-cell"><span>车速</span><b id="loc-speed">--</b></div>
+      <div class="loc-cell"><span>朝向</span><b id="loc-head">--</b></div>
+    </div>
+    <div class="loc-time" id="loc-time">--</div>
+    <button class="btn" id="loc-open">在地图 App 打开</button>
+    <div class="loc-note">坐标来自车端 GPS，停放状态下可能漂移几十米</div>
+  </div>
+</div>
+<div class="sheet" id="diag-sheet">
+  <div class="sheet-hd">
+    <span>空调通道诊断</span>
+    <span class="sheet-x" id="diag-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="diag-pre" id="diag-pre">--</div>
+    <div class="loc-note">把这一屏截图发给作者，就能定位是哪个通道被车端拒绝。</div>
+  </div>
+</div>
+<div class="sheet" id="model-sheet">
+  <div class="sheet-hd">
+    <span>车辆设置</span>
+    <span class="sheet-x" id="model-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="donate">
+      <div class="donate-hd">捐赠二维码</div>
+      <div class="donate-row">
+        <div class="donate-item">
+          <img class="donate-qr" src="img/donate-wechat.jpg" alt="微信">
+          <span class="donate-tag wx">微信</span>
+        </div>
+        <div class="donate-item">
+          <img class="donate-qr" src="img/donate-alipay.jpg" alt="支付宝">
+          <span class="donate-tag ali">支付宝</span>
+        </div>
+      </div>
+      <div class="donate-txt">捐不捐赠，功能完全一样。<br>所有功能对所有人开放，没有任何东西锁在捐赠后面。<br>如果你愿意请我喝杯咖啡，我会很感谢你。<br>一毛两毛也是爱。</div>
+    </div>
+    <div class="set-list">
+      <div class="set-row" data-act="theme">
+        <div class="set-txt"><b>外观</b><span>背景图片、卡片质感、字体和强调色</span></div>
+        <span class="go">调整</span>
+      </div>
+      <div class="set-row" id="row-pin">
+        <div class="set-txt"><b>控车码</b><span id="pin-state">未设置，部分车型下发指令需要</span></div>
+        <span class="go">设置</span>
+      </div>
+      <div class="set-row col" id="row-ds">
+        <div class="set-txt"><b>数据来源</b><span id="ds-sub">油量、续航用服务器返回的值</span></div>
+        <div class="chip-row">
+          <div class="chip" data-ds="server">服务器</div>
+          <div class="chip" data-ds="local">本地计算</div>
+          <div class="chip" data-ds="liter">车端升数</div>
+        </div>
+      </div>
+      <div class="set-row" id="row-check">
+        <div class="set-txt"><b>数据校验</b><span id="check-sub">拿车上的读数比一比，自动挑对的数据来源</span></div>
+        <span class="go" id="check-btn">校准</span>
+      </div>
+      <div class="set-row" id="row-tank">
+        <div class="set-txt"><b>油箱容量</b><span id="tank-sub">50 L · 换车型请按实际改</span></div>
+        <span class="go" id="tank-btn">修改</span>
+      </div>
+      <div class="set-row col" id="row-refresh">
+        <div class="set-txt"><b>车况刷新频率</b><span id="refresh-sub">5 分钟 · 刷新会唤醒车机，越勤越费电瓶</span></div>
+        <div class="chip-row">
+          <div class="chip" data-rs="60">1 分钟</div>
+          <div class="chip" data-rs="300">5 分钟</div>
+          <div class="chip" data-rs="600">10 分钟</div>
+          <div class="chip" data-rs="0">不自动</div>
+        </div>
+      </div>
+      <div class="set-row" data-k="widgetNet" data-def="0">
+        <div class="set-txt"><b>小组件自动刷新</b><span>关掉后小组件只显示上次的数据，不再联网唤醒车机</span></div>
+        <div class="switch" id="sw-widgetnet"><i></i></div>
+      </div>
+      <div class="set-row" data-k="confirm">
+        <div class="set-txt"><b>操作二次确认</b><span>点快捷指令、开关空调前先问一句「确定执行吗」</span></div>
+        <div class="switch" id="sw-confirm"><i></i></div>
+      </div>
+      <div class="set-row" data-k="show.pano">
+        <div class="set-txt"><b>360 全景</b><span>首页显示「360 全景」拍照入口</span></div>
+        <div class="switch" id="sw-pano"><i></i></div>
+      </div>
+      <div class="set-row" data-k="show.trip">
+        <div class="set-txt"><b>车辆轨迹</b><span>首页显示「我的轨迹」卡片</span></div>
+        <div class="switch" id="sw-trip"><i></i></div>
+      </div>
+      <div class="set-row" data-k="show.log">
+        <div class="set-txt"><b>操作记录</b><span>首页显示「操作记录」卡片</span></div>
+        <div class="switch" id="sw-log"><i></i></div>
+      </div>
+      <div class="set-row" data-k="show.loc">
+        <div class="set-txt"><b>车辆位置</b><span>首页显示「车辆位置」卡片</span></div>
+        <div class="switch" id="sw-loc"><i></i></div>
+      </div>
+    </div>
+    <div class="set-hd hd-row">
+      <span>语音触发 · 加入抖音群查看使用教程</span>
+      <button class="hd-link" id="dy-home">我的抖音主页 ›</button>
+    </div>
+    <div class="set-list">
+      <div class="set-row" data-k="ntf">
+        <div class="set-txt"><b>通知触发</b><span>通知里出现指令名就下发，如 openAir</span></div>
+        <div class="switch" id="sw-ntf"><i></i></div>
+      </div>
+      <div class="set-row" data-k="keep">
+        <div class="set-txt"><b>后台常驻</b><span>打开后会在通知栏常驻，防止划掉后台后通知监听失效</span></div>
+        <div class="switch" id="sw-keep"><i></i></div>
+      </div>
+      <div class="set-row" data-k="ntfSafe" data-def="0">
+        <div class="set-txt"><b>锁屏保护</b><span>锁屏时忽略开门、开窗、启动</span></div>
+        <div class="switch" id="sw-ntfsafe"><i></i></div>
+      </div>
+      <div class="set-row" data-act="auth">
+        <div class="set-txt"><b>通知使用权</b><span id="ntf-auth">检测中…</span></div>
+        <span class="go" id="ntf-go">去授权</span>
+      </div>
+      <div class="set-row" data-act="ntflog">
+        <div class="set-txt"><b>通知记录</b><span>最近收到的通知，排查某个 App 有没有被监听到</span></div>
+        <span class="go">查看</span>
+      </div>
+    </div>
+    <div class="set-hd">后台权限 · 建议开启</div>
+    <div class="set-list">
+      <div class="set-row" data-act="perm">
+        <div class="set-txt"><b>自启动</b><span>不打开的话，划掉后台后常驻服务可能拉不回来</span></div>
+        <span class="go">去设置</span>
+      </div>
+      <div class="set-row" data-act="perm">
+        <div class="set-txt"><b>省电策略 · 无限制</b><span>省电策略会定期清理后台，选「无限制」才能长期挂着</span></div>
+        <span class="go">去设置</span>
+      </div>
+    </div>
+    <div class="set-hd">指令写法 · 点一下复制</div>
+    <div class="cmd-list" id="cmd-list"></div>
+    <div class="set-hd">车辆模型</div>
+    <div class="model-note" id="model-note">--</div>
+    <div class="paint-hd">车漆</div>
+    <div class="paint-row" id="paint-row"></div>
+    <div class="model-grid" id="model-grid"></div>
+    <div class="loc-note" id="model-foot">--</div>
+  </div>
+</div>
+<div class="lightbox" id="lightbox"><img id="lightbox-img" alt=""></div>
+
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-title">免责声明</div>
+    <div class="gate-body">
+      <p>本软件为个人学习与技术交流作品，非长安汽车官方应用，与长安汽车无任何隶属关系。</p>
+      <p>软件内所有接口均来自官方公开渠道，作者不对使用本软件造成的任何直接或间接损失承担责任。</p>
+      <p>请于下载后 24 小时内自行删除，禁止用于任何商业用途，禁止倒卖、转售、打包出售。</p>
+      <p>使用本软件即视为你已阅读并接受上述条款，一切后果由使用者自行承担。</p>
+    </div>
+    <div class="gate-gap"></div>
+    <button class="btn ghost" id="gate-douyin">关注抖音「让生活躺赢」</button>
+    <div class="gate-field">
+      <input id="gate-input" placeholder="请输入「我同意」以继续" autocomplete="off">
+    </div>
+    <button class="btn" id="gate-btn" disabled>进 入</button>
+  </div>
+</div>
+
+<div class="confirm" id="confirm">
+  <div class="cf-card">
+    <div class="cf-t" id="cf-title">确定要执行吗？</div>
+    <div class="cf-d" id="cf-desc">--</div>
+    <div class="cf-btns">
+      <button class="cf-btn" id="cf-no">取消</button>
+      <button class="cf-btn ok" id="cf-yes">执 行</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="ntf-sheet">
+  <div class="sheet-hd">
+    <span>通知记录</span>
+    <span class="sheet-x" id="ntf-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="raw-note">最近 20 条通知（不管有没有命中指令都会留一行）。如果你在米家里触发了自动化，这里没有对应记录，说明通知根本没到 App。</div>
+    <pre class="raw-pre" id="ntf-pre">读取中…</pre>
+    <div class="th-btns" style="margin-top:14px">
+      <button class="th-btn" id="ntf-clear">清空记录</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="tank-sheet">
+  <div class="sheet-hd">
+    <span>油箱容量</span>
+    <span class="sheet-x" id="tank-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="set-hd">单位升，按车辆说明书填</div>
+    <input class="gate-input" id="tank-input" type="number" inputmode="decimal" placeholder="例如 53">
+    <div class="chip-row" style="margin-top:12px">
+      <div class="chip" data-tank="45">45 L</div>
+      <div class="chip" data-tank="50">50 L</div>
+      <div class="chip" data-tank="53">53 L</div>
+      <div class="chip" data-tank="55">55 L</div>
+      <div class="chip" data-tank="58">58 L</div>
+      <div class="chip" data-tank="60">60 L</div>
+    </div>
+    <div class="th-btns" style="margin-top:14px">
+      <button class="th-btn primary" id="tank-save">保存</button>
+      <button class="th-btn" id="tank-reset">恢复 50 L</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="check-sheet">
+  <div class="sheet-hd">
+    <span>数据校验</span>
+    <span class="sheet-x" id="check-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="set-hd">填车上仪表或官方 App 显示的读数，我按它比一比哪个来源最接近（填一项也能比）</div>
+    <div class="ck-label">油量</div>
+    <div class="chip-row" id="check-unit">
+      <div class="chip on" data-unit="pct">百分比 %</div>
+      <div class="chip" data-unit="liter">升 L</div>
+    </div>
+    <input class="gate-input" id="check-input" type="number" inputmode="decimal" placeholder="例如 62">
+    <div class="ck-label">续航里程</div>
+    <input class="gate-input" id="check-range" type="number" inputmode="decimal" placeholder="例如 420（单位 km）">
+    <div class="th-btns" style="margin-top:14px">
+      <button class="th-btn primary" id="check-run">开始比对</button>
+    </div>
+    <div id="check-out" class="check-out"></div>
+  </div>
+</div>
+
+<div class="sheet" id="pin-sheet">
+  <div class="sheet-hd">
+    <span>控车码</span>
+    <span class="sheet-x" id="pin-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="set-hd">6 位数字，存在本机，下发指令时自动带上</div>
+    <input class="gate-input" id="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="输入控车码">
+    <div class="th-btns" style="margin-top:14px">
+      <button class="th-btn primary" id="pin-save">保存</button>
+      <button class="th-btn" id="pin-clear">清除</button>
+    </div>
+  </div>
+</div>
+
+<div class="pano-act" id="pano-act">
+  <div class="pa-box">
+    <div class="pa-t">这张照片</div>
+    <div class="pa-row">
+      <button class="pa-btn danger" id="pa-del">删除</button>
+      <button class="pa-btn" id="pa-hide">隐藏</button>
+    </div>
+    <div class="pa-hint">删除＝服务端真删，所有设备都没了<br>隐藏＝只在这台手机不显示</div>
+  </div>
+</div>
+
+<div class="sheet" id="raw-sheet">
+  <div class="sheet-hd">
+    <span>车况原始数据</span>
+    <span class="sheet-x" id="raw-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <pre class="raw-pre" id="raw-pre">读取中…</pre>
+  </div>
+</div>
+
+<div class="sheet" id="theme-sheet">
+  <div class="sheet-hd">
+    <span>外观</span>
+    <span class="sheet-x" id="theme-x">关闭</span>
+  </div>
+  <div class="sheet-bd">
+    <div class="set-hd">默认主题</div>
+    <div class="theme-grid" id="theme-grid"></div>
+
+    <div class="set-hd">背景</div>
+    <div class="th-btns">
+      <button class="th-btn primary" id="bg-pick">选择背景图片</button>
+      <button class="th-btn" id="bg-clear">恢复默认</button>
+    </div>
+    <div class="th-slider">
+      <div class="hd"><b>背景模糊</b><span id="bg-blur-v">0</span></div>
+      <input type="range" id="bg-blur" min="0" max="24" step="1" value="0">
+    </div>
+    <div class="th-slider">
+      <div class="hd"><b>背景压暗</b><span id="bg-dim-v">0%</span></div>
+      <input type="range" id="bg-dim" min="0" max="85" step="1" value="0">
+    </div>
+
+    <div class="set-hd">卡片</div>
+    <div class="th-row">
+      <div><span class="lb">质感</span></div>
+      <div class="chip-row">
+        <div class="chip" data-style="glass">毛玻璃</div>
+        <div class="chip" data-style="clear">通透</div>
+      </div>
+    </div>
+    <div class="th-slider">
+      <div class="hd"><b>卡片透明度</b><span id="card-alpha-v">6%</span></div>
+      <input type="range" id="card-alpha" min="0" max="100" step="1" value="6">
+    </div>
+    <div class="th-slider">
+      <div class="hd"><b>卡片圆角</b><span id="card-radius-v">22px</span></div>
+      <input type="range" id="card-radius" min="0" max="34" step="1" value="22">
+    </div>
+    <div class="th-slider">
+      <div class="hd"><b>卡片阴影</b><span id="card-shadow-v">25%</span></div>
+      <input type="range" id="card-shadow" min="0" max="100" step="1" value="25">
+    </div>
+    <div class="th-row" data-color="card">
+      <div><span class="lb">卡片颜色</span></div>
+      <div class="swatch" id="sw-card"></div>
+    </div>
+
+    <div class="set-hd">主题颜色 · 点色块打开色盘</div>
+    <div class="th-row" data-color="text">
+      <div><span class="lb">字体颜色</span></div>
+      <div class="swatch" id="sw-text"></div>
+    </div>
+    <div class="th-row" data-color="icon">
+      <div><span class="lb">图标颜色</span><span class="lb-sub">不跟字体颜色</span></div>
+      <div class="swatch" id="sw-icon"></div>
+    </div>
+    <div class="th-row" data-color="accent">
+      <div><span class="lb">强调色</span></div>
+      <div class="swatch" id="sw-accent"></div>
+    </div>
+
+    <div class="th-btns" style="margin-top:14px">
+      <button class="th-btn" id="theme-reset">恢复默认外观</button>
+    </div>
+  </div>
+</div>
+
+<div class="cp" id="cp">
+  <div class="cp-card">
+    <div class="cp-title" id="cp-title">选择颜色</div>
+    <canvas class="cp-sv" id="cp-sv" width="300" height="158"></canvas>
+    <canvas class="cp-hue" id="cp-hue" width="300" height="18"></canvas>
+    <div class="cp-prev" id="cp-prev"></div>
+    <input class="cp-hex" id="cp-hex" maxlength="7" value="#FFFFFF">
+    <div class="cp-btns">
+      <button class="cp-btn" id="cp-cancel">取消</button>
+      <button class="cp-btn ok" id="cp-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="picker" id="act-picker">
+  <div class="picker-card">
+    <div class="picker-hd"><span>添加快捷指令</span><span id="picker-x">关闭</span></div>
+    <div id="picker-bd"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/three/three.min.js"></script>
+<script src="js/three/meshopt_decoder.js"></script>
+<script src="js/three/GLTFLoader.js"></script>
+<script src="js/three/OrbitControls.js"></script>
+<script src="js/three/RGBELoader.js"></script>
+<script src="js/viewer3d.js"></script>
+<script src="js/overlay.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

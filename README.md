@@ -19,6 +19,19 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.11 (11)
+- **主界面直接换成安卓那套网页界面**：`iCar/WebUI/` 放的就是安卓 `core/assets/web` 的
+  `index.html / app.css / app.js / overlay.js / viewer3d.js`，iOS 只做两件事——
+  起本地 HTTP 服务喂页面、用 `NativeBridge` 实现安卓那 38 个 `Native.*` 桥方法。
+  这样两边 UI 天然一模一样，以后安卓改了网页，把文件复制过来就行（不用重写 SwiftUI）。
+- 桥的两种通道：同步（`state / kvGet / version / pinCode / accepted …`）走
+  `prompt("icar:{…}")` 当场返回；异步（`status / exec / trips / photos …`）走
+  `window.webkit.messageHandlers.icar` + `window.__cb(id, ok, msg)` 回调。
+- 车况 JSON 按安卓 `Ui.statusJson()` 逐字段搬过来（油量三档、门/窗/灯、胎压、发动机转速归一）。
+- 3D 模型不重复存：网页里 `3D/*.glb` 由服务器映射到已有的 `CarWeb/3D/`。
+- iOS 更新提示暂时关掉（`versionCode` 返回 0）：Gitee 上那份 version.json 是安卓 versionCode，
+  拿它比 iOS build 会一直误报「有新版本」。等做 iOS 专用版本源再开。
+
 ### v0.10 (9)
 - 修「操作成功后顶部还挂着等待车端确认」：把下发和等回执拆成两步——
   指令发出去（拿到 taskId）立刻显示「已下发 · 解锁，等车端回执」，车端回执到了再变「解锁 · 成功」。

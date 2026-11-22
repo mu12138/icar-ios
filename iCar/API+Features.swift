@@ -289,4 +289,39 @@ extension ChangAnAPI {
         }
         return j["msg"] as? String ?? "已下发"
     }
+
+    // MARK: - 网页版桥用的原始数据（与安卓 Api.java 一一对应）
+
+    static func tripsRaw(start: String, end: String) async throws -> [[String: Any]] {
+        let id = try carId()
+        let j = try await authed("/app2/api/driving?carId=\(id)&startDate=\(start)&endDate=\(end)&loading=false&toast=false&ErrorAutoProjectile=false&token=TOKEN")
+        if let a = j["data"] as? [[String: Any]] { return a }
+        if let d = j["data"] as? [String: Any], let a = d["data"] as? [[String: Any]] { return a }
+        return []
+    }
+
+    static func actionsRaw(page: Int, size: Int) async throws -> [[String: Any]] {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd+HH:mm:ss"
+        let end = f.string(from: Date()).replacingOccurrences(of: ":", with: "%3A")
+        let start = f.string(from: Calendar.current.date(byAdding: .month, value: -6, to: Date()) ?? Date())
+            .replacingOccurrences(of: ":", with: "%3A")
+        let id = try carId()
+        let j = try await authed("/appserver/api/car/getControlActionHistory?carId=\(id)&pageSize=\(size)&page=\(page)&startTime=\(start)&endTime=\(end)&toast=false&ErrorAutoProjectile=false&token=TOKEN&isNev=0", method: "POST")
+        if let d = j["data"] as? [String: Any], let a = d["data"] as? [[String: Any]] { return a }
+        if let a = j["data"] as? [[String: Any]] { return a }
+        return []
+    }
+
+    static func locationRaw() async throws -> [String: Any] {
+        let id = try carId()
+        let j = try await authed("/appserver/api/cardata/getCarLocation?carId=\(id)&mapType=AMap&loading=false&ErrorAutoProjectile=false&token=TOKEN", method: "POST")
+        guard let d = j["data"] as? [String: Any] else { throw APIError.bad(j["msg"] as? String ?? "定位失败") }
+        return d
+    }
+
+    static func panoramaRaw() async throws -> [[String: Any]] {
+        let id = try carId()
+        let j = try await authed("/appserver/api/file/getMediaFilesByUserIdAndCarId?pageIndex=0&pageSize=40&carId=\(id)&fileType=1&ErrorAutoProjectile=false&token=TOKEN&isNev=0&deviceId=00000000-4627-0c29-ffff-ffffef05ac4a", method: "POST")
+        return j["data"] as? [[String: Any]] ?? []
+    }
 }

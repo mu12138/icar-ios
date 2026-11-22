@@ -17,7 +17,11 @@ targets:
         excludes:
           - Info.plist
           - CarWeb
+          - WebUI
       - path: iCar/CarWeb
+        type: folder
+        buildPhase: resources
+      - path: iCar/WebUI
         type: folder
         buildPhase: resources
     info:
@@ -27,8 +31,8 @@ targets:
         CFBundleDevelopmentRegion: zh_CN
         # 版本号：和下面的 MARKETING_VERSION / CURRENT_PROJECT_VERSION 保持一致
         # （release-ios.sh 会一起改，别只改一处）
-        CFBundleShortVersionString: "0.10"
-        CFBundleVersion: "9"
+        CFBundleShortVersionString: "0.11"
+        CFBundleVersion: "10"
         UILaunchScreen: {}
         UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations:
@@ -47,8 +51,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cn.icar.native
         PRODUCT_NAME: iCar
-        MARKETING_VERSION: "0.10"
-        CURRENT_PROJECT_VERSION: "9"
+        MARKETING_VERSION: "0.11"
+        CURRENT_PROJECT_VERSION: "10"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Manual
         CODE_SIGNING_REQUIRED: "NO"

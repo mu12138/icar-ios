@@ -101,6 +101,7 @@ enum ChangAnAPI {
         Store.set(car["carId"] as? String ?? "", for: "carId")
         Store.set(car["carName"] as? String ?? car["seriesName"] as? String ?? "我的车", for: "carName")
         Store.set(car["seriesName"] as? String ?? "", for: "seriesName")
+        Store.set(car["seriesCode"] as? String ?? "", for: "seriesCode")
     }
 
     // MARK: - token 维护
@@ -153,6 +154,13 @@ enum ChangAnAPI {
     // MARK: - 车况
 
     static func status() async throws -> CarStatus {
+        let d = try await statusRaw()
+        DebugLog.shared.add("车况字段数 \(d.count)")
+        return CarStatus(raw: d)
+    }
+
+    /// 车况原始 data（网页版桥用，按安卓 statusJson 的口径自己组装）
+    static func statusRaw() async throws -> [String: Any] {
         let carId = Store.get("carId") ?? ""
         guard !carId.isEmpty else { throw APIError.bad("未绑定车辆") }
         // 车况接口只认 POST：GET 会回 40005「请求方法不支持：GET」，
@@ -169,8 +177,7 @@ enum ChangAnAPI {
             DebugLog.shared.add("⚠️ 车况为空 code=\(code) msg=\(msg)")
             throw APIError.bad("车况为空（\(code) \(msg)）")
         }
-        DebugLog.shared.add("车况字段数 \(d.count)")
-        return CarStatus(raw: d)
+        return d
     }
 
     /// 车况 data 可能是对象，也可能被包成 JSON 字符串，两种都认
