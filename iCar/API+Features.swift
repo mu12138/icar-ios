@@ -21,7 +21,7 @@ extension ChangAnAPI {
         let p = path.replacingOccurrences(of: "TOKEN", with: token())
         var d = try await send(base + p, method: method, form: body)
         var j = try JSONSerialization.jsonObject(with: d) as? [String: Any] ?? [:]
-        if (j["code"] as? Int) == 2 {
+        if ChangAnAPI.codeInt(j) == 2 {
             try await ensureToken(force: true)
             let p2 = path.replacingOccurrences(of: "TOKEN", with: token())
             d = try await send(base + p2, method: method, form: body)

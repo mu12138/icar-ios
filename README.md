@@ -19,6 +19,16 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.8 (7)
+- 修「车况为空」：`/app2/api/car/data` 服务端现在只收 **POST**，原来用 GET 会被回
+  40005「请求方法不支持：GET」，`data` 拿不到 → 首页全空、顶部弹「车况为空」。
+  改成 POST 并按安卓版带全参数（`ErrorAutoProjectile=false&toast=false&keys=*&isNev=0`），
+  另外留一次 GET 兜底，免得服务端哪天又改回去。
+- 错误提示带原因：车况失败时弹的是「车况为空（code msg）」，不再只有四个字，方便直接看出是
+  token 过期、方法不支持还是车辆没绑定。
+- `code` 兼容字符串：media 等接口把 code 回成 `"2"`，原来只认数字，导致 token 过期不自动刷新；
+  现在统一按安卓 `optInt` 的习惯取整。
+
 ### v0.7 (6)
 - 修 3D 车模加载不出来：WKWebView 用 file:// 打开时，three.js 的 GLTFLoader/RGBELoader
   走 fetch 会被 WebKit 拦掉，表现为「有背景、中间是空的」。改成内置本机 HTTP 服务

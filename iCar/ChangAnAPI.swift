@@ -9,6 +9,15 @@ enum ChangAnAPI {
 
     // MARK: - 底层请求
 
+    /// 长安接口的 code 有时是数字、有时是字符串（如 media 接口回 "2"），
+    /// 按安卓 optInt 的习惯统一取整，避免该刷 token 时没刷
+    static func codeInt(_ j: [String: Any]) -> Int {
+        if let i = j["code"] as? Int { return i }
+        if let n = j["code"] as? NSNumber { return n.intValue }
+        if let s = j["code"] as? String, let i = Int(s) { return i }
+        return -1
+    }
+
     static func send(_ urlString: String,
                              method: String = "GET",
                              form: [String: String]? = nil) async throws -> Data {
@@ -64,7 +73,7 @@ enum ChangAnAPI {
                                method: "POST",
                                form: ["mobile": phone, "vercode": code])
         let j = try json(d)
-        guard (j["code"] as? Int ?? -1) == 0 else {
+        guard codeInt(j) == 0 else {
             throw APIError.bad(j["msg"] as? String ?? "登录失败")
         }
         guard let data = j["data"] as? [String: Any],
@@ -131,7 +140,7 @@ enum ChangAnAPI {
         if method == "POST", body == nil { body = ["token": token] }
         var d = try await send(base + p, method: method, form: body)
         var j = try json(d)
-        if (j["code"] as? Int) == 2 {          // token 过期，刷新后重试一次
+        if codeInt(j) == 2 {          // token 过期，刷新后重试一次
             try await ensureToken(force: true)
             let t2 = Store.get("token") ?? ""
             p = path.replacingOccurrences(of: "TOKEN", with: t2)
@@ -146,13 +155,31 @@ enum ChangAnAPI {
     static func status() async throws -> CarStatus {
         let carId = Store.get("carId") ?? ""
         guard !carId.isEmpty else { throw APIError.bad("未绑定车辆") }
-        let j = try await getJSON("/app2/api/car/data?carId=\(carId)&keys=*&isNev=0&token=TOKEN")
-        guard let d = j["data"] as? [String: Any] else {
-            DebugLog.shared.add("⚠️ 车况为空 code=\(j["code"] ?? "-") msg=\(j["msg"] ?? "-")")
-            throw APIError.bad("车况为空")
+        // 车况接口只认 POST：GET 会回 40005「请求方法不支持：GET」，
+        // 以前能用是服务端放宽过，现在收紧了，参数照安卓版带全
+        let path = "/app2/api/car/data?carId=\(carId)&ErrorAutoProjectile=false&toast=false&keys=*&isNev=0&token=TOKEN"
+        var j = try await getJSON(path, method: "POST")
+        if codeInt(j) == 40005 {
+            // 万一服务端以后又放回 GET，兜一次，不至于又全空
+            j = try await getJSON(path, method: "GET")
+        }
+        guard let d = carData(j) else {
+            let code = j["code"].map { "\($0)" } ?? "-"
+            let msg = (j["msg"] as? String) ?? "-"
+            DebugLog.shared.add("⚠️ 车况为空 code=\(code) msg=\(msg)")
+            throw APIError.bad("车况为空（\(code) \(msg)）")
         }
         DebugLog.shared.add("车况字段数 \(d.count)")
         return CarStatus(raw: d)
+    }
+
+    /// 车况 data 可能是对象，也可能被包成 JSON 字符串，两种都认
+    private static func carData(_ j: [String: Any]) -> [String: Any]? {
+        if let d = j["data"] as? [String: Any] { return d }
+        if let s = j["data"] as? String,
+           let obj = try? JSONSerialization.jsonObject(with: Data(s.utf8)),
+           let d = obj as? [String: Any] { return d }
+        return nil
     }
 
     // MARK: - 下发指令
@@ -169,14 +196,14 @@ enum ChangAnAPI {
         let pinData = try await send("\(base)/app2/api/control/createPinVerifyCode",
                                      method: "POST", form: ["token": token])
         let pinJ = try json(pinData)
-        guard (pinJ["code"] as? Int) == 0, let pinCode = pinJ["data"] as? String else {
+        guard codeInt(pinJ) == 0, let pinCode = pinJ["data"] as? String else {
             throw APIError.bad("PIN 获取失败")
         }
 
         // 2. 公钥
         let keyData = try await send("\(base)/app2/api/v2/security/key?carId=\(carId)&moblie=&token=\(esc(token))")
         let keyJ = try json(keyData)
-        guard (keyJ["code"] as? Int) == 0, let keyB64 = keyJ["data"] as? String,
+        guard codeInt(keyJ) == 0, let keyB64 = keyJ["data"] as? String,
               let der = Data(base64Encoded: keyB64) else {
             throw APIError.bad("公钥获取失败")
         }
@@ -205,7 +232,7 @@ enum ChangAnAPI {
         for (k, v) in extra { body[k] = v }
         let execData = try await send("\(base)/app2/api/v3/control/execute", method: "POST", form: body)
         let execJ = try json(execData)
-        guard (execJ["code"] as? Int) == 0 else {
+        guard codeInt(execJ) == 0 else {
             throw APIError.bad(execJ["msg"] as? String ?? "指令发送失败")
         }
 
@@ -219,7 +246,7 @@ enum ChangAnAPI {
             let stData = try await send("\(base)/api/car/getControlInfo", method: "POST",
                                         form: ["token": token, "carId": carId, "id": taskId, "isNev": "0"])
             let stJ = try json(stData)
-            if (stJ["code"] as? Int) == 0, let dd = stJ["data"] as? [String: Any] {
+            if codeInt(stJ) == 0, let dd = stJ["data"] as? [String: Any] {
                 switch dd["handleStatus"] as? String {
                 case "Completed": return "成功"
                 case "Failed": throw APIError.bad(dd["handleStatusDesc"] as? String ?? "执行失败")

@@ -17,7 +17,7 @@
 
 ## 当前版本
 
-`0.7`（build 6）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
+`0.8`（build 7）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
 
 ```
 project.yml:  MARKETING_VERSION / CURRENT_PROJECT_VERSION
@@ -43,7 +43,7 @@ cd /1000/AI/icar-mod/ios-native
 
 装到手机：Sideloadly + 免费 Apple ID（7 天有效），需开开发者模式并信任证书。
 
-## 已完成（v0.7）
+## 已完成（v0.8）
 
 - 手机号 + 验证码登录，token 存 Keychain
 - 车况首页（油量/续航/车速/温度/车锁/空调/里程/门窗天窗）
@@ -52,6 +52,7 @@ cd /1000/AI/icar-mod/ios-native
 - 3D 车模（与安卓同款 GLB，13 车型，走 WKWebView + three.js）
 - 轨迹、360 全景（查看/拍照/长按删除隐藏）、车辆位置、操作记录
 - 设置：控车码、二次确认、强调色、抖音入口、更新提示、调试信息
+- v0.8 修车况空：`/app2/api/car/data` 改成 POST（GET 现在回 40005），错误弹窗带 code/msg
 
 ## 待补（对齐安卓 5.73）
 
