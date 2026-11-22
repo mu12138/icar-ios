@@ -17,7 +17,7 @@
 
 ## 当前版本
 
-`0.11`（build 11）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
+`0.11`（build 10）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
 
 ```
 project.yml:  MARKETING_VERSION / CURRENT_PROJECT_VERSION

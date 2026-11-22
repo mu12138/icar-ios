@@ -19,7 +19,7 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
-### v0.11 (11)
+### v0.11 (10)
 - **主界面直接换成安卓那套网页界面**：`iCar/WebUI/` 放的就是安卓 `core/assets/web` 的
   `index.html / app.css / app.js / overlay.js / viewer3d.js`，iOS 只做两件事——
   起本地 HTTP 服务喂页面、用 `NativeBridge` 实现安卓那 38 个 `Native.*` 桥方法。
