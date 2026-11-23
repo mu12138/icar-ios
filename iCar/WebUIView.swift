@@ -20,9 +20,6 @@ struct WebUIView: UIViewRepresentable {
         uc.addUserScript(WKUserScript(source: Self.iosHideJS,
                                       injectionTime: .atDocumentEnd,
                                       forMainFrameOnly: true))
-        uc.addUserScript(WKUserScript(source: Self.iosThemeJS,
-                                      injectionTime: .atDocumentEnd,
-                                      forMainFrameOnly: true))
         cfg.userContentController = uc
 
         let wv = WKWebView(frame: .zero, configuration: cfg)
@@ -89,71 +86,6 @@ struct WebUIView: UIViewRepresentable {
     })();
     """
 
-
-
-    /// iOS 专属预设主题「夜航」：安卓那份 app.js 里没有，这里扩进去（只在 iOS 生效）。
-    /// 背景图随包带（WebUI/bg/midnight.jpg），配色比内置那 9 套更冷、更偏「仪表盘」。
-    static let iosThemeJS = """
-    (function () {
-      var ID = 'midnight', NAME = '夜航';
-      var BASE = { id: ID, name: NAME, accent: '#4D7CFE', icon: '#DCE6FF', dim: 30, blur: 6 };
-      var EXTRA = { txt: '#E8EFFF', card: '#0D1626', style: 'glass',
-                    alpha: '10', radius: '24', shadow: '30' };
-
-      function ensureEntry() {
-        try {
-          if (typeof THEMES !== 'undefined' && THEMES &&
-              !THEMES.some(function (t) { return t.id === ID; })) {
-            THEMES.push(BASE);
-          }
-        } catch (e) {}
-      }
-
-      function applyMine() {
-        try { applyPreset(ID); } catch (e) { return; }
-        try {
-          thSet('txtColor', EXTRA.txt);
-          thSet('cardColor', EXTRA.card);
-          thSet('cardStyle', EXTRA.style);
-          thSet('cardAlpha', EXTRA.alpha);
-          thSet('cardRadius', EXTRA.radius);
-          thSet('cardShadow', EXTRA.shadow);
-          applyTheme();
-          syncThemeUI();
-          renderThemeGrid();
-          if (typeof toast === 'function') toast('已切换主题：' + NAME, 'ok');
-        } catch (e) {}
-      }
-
-      function tag() {
-        var box = document.getElementById('theme-grid');
-        if (!box) return;
-        Array.prototype.forEach.call(box.children, function (el) {
-          var span = el.querySelector('span');
-          if (!span || span.textContent !== NAME) return;
-          el.onclick = applyMine;
-        });
-      }
-
-      function boot() {
-        ensureEntry();
-        try {
-          var orig = renderThemeGrid;
-          if (orig && !orig.__iosTagged) {
-            var wrapped = function () { orig.apply(this, arguments); tag(); };
-            wrapped.__iosTagged = true;
-            renderThemeGrid = wrapped;
-          }
-          renderThemeGrid();
-        } catch (e) {}
-        tag();
-      }
-
-      boot();
-      document.addEventListener('DOMContentLoaded', boot);
-      setInterval(function () { ensureEntry(); tag(); }, 1200);
-    })();
-    """
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         weak var webView: WKWebView?
