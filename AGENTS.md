@@ -26,6 +26,24 @@ project.yml:  CFBundleShortVersionString / CFBundleVersion（在 info.properties
 
 只改前两个会出现「装上去显示 0.3」这种问题（0.5/0.6 就是踩了这个坑，已删）。
 
+## 发布标准流程（用户 2026-11-23 定）
+
+以后任何"推送/发布"都走这一套，顺序别换：
+
+```bash
+./publish-ios.sh 1.2     # 出包 → 压 zip → 上传夸克 → 推更新提示 → 校验两个源
+```
+
+底层是四步，手工跑也行：
+
+1. `./release-ios.sh <版本>`：出包（自动升 build、发 GitHub Release、下载 ipa）
+2. 压成 `岁岁长安-iOS原生-v<版本>.zip`（里面就是未签名 ipa）
+3. 上传到夸克 `/1000-1-e8adecdf/我的分享/iOS控车（先下载后解压）`
+4. `./push-update.sh <版本> <build> https://pan.quark.cn/s/99af162ad542 "点「去下载」到网盘拿压缩包（长按压缩包下载后解压）"`
+
+注意：夸克分享链接跟安卓同一个（`https://pan.quark.cn/s/99af162ad542`）。
+raw 源有约 5 分钟缓存，jsDelivr 由 push 脚本自动清。
+
 ## 出包（不自动推更新）
 
 ```bash
