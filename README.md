@@ -19,6 +19,26 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.20 (19)
+一次整体瘦身 + 稳一稳，功能没动：
+
+- **删掉 1,844 行死代码**（占原有 Swift 的 52%）：`HomeView / LoginView / SettingsView / TripsView /
+  PanoramaView / DetailSheet / CabinView / CarStageView / AppModel / Models / Update / Theme`。
+  现在原生只剩：`ChangAnAPI / API+Features / NativeBridge / WebUIView / RootView / CarWebServer /
+  DebugLog / Keychain / RSACrypto`。
+- **删掉包里用不到的资源**：`CarWeb/js`（832K，旧 3D 页用）、`CarWeb/carview.html`、`CarWeb/textures`
+  （网页用自己那份）。CarWeb 现在只剩 `3D/*.glb`。
+- **WebView 不再白屏**：首次加载失败自动重试（最多 3 次），网页进程被系统回收后自动重新拉起；
+  从后台切回来会让页面刷新一次车况。
+- **键盘**：`keyboardDismissMode = .interactive`，输入时上滑即可收键盘。
+- **缓存**：URLCache 提到内存 32M / 磁盘 256M，360 缩略图不再每次重下。
+- **本地服务**：端口优先固定 `17822`（页面 localStorage 不再因端口变化失效），被占用才退回随机；
+  3D 模型 25M 改成 64K 分块流式发送，不再整个读进内存。
+- **偏好写盘防抖**：拖模糊/暗度滑块时不再每帧写 UserDefaults，攒 250ms 一次落盘，切后台强制刷一次。
+- **日志落文件**：`Documents/bridge.log`（Files App 里能直接拿），记录每次网络请求和桥调用，
+  超过 400KB 自动只留后半段。Info.plist 开了 `UIFileSharingEnabled`。
+- 网页里安卓返回键的残留代码（`window.__back`）删掉。
+
 ### v0.19 (18)
 - 360 拍照不再把已有照片「抹掉」：
   - 拍照返回空列表时保留拍照前的列表，并提示「车端还没上传新照片，先显示原来的」；

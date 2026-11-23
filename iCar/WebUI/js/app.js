@@ -2850,29 +2850,6 @@ function bindTheme() {
 
 applyTheme();
 
-// ---------------- 返回键：先关最上层的二级面板 ----------------
-// 原生 MainActivity 会先问这里：返回 true 表示已经关掉一层，false 才退回桌面
-window.__back = function () {
-  const shown = id => { const n = $(id); return !!(n && n.classList.contains('show')); };
-  if (shown('confirm')) { if (cfResolve) cfResolve(false); return true; }
-  if (shown('act-picker')) { closePicker(); return true; }
-  if (shown('cp')) { closeColorPicker(); return true; }
-  if (shown('theme-sheet')) { $('theme-sheet').classList.remove('show'); return true; }
-  if (shown('lightbox')) { $('lightbox').classList.remove('show'); return true; }
-  // 所有二级弹层都关一遍；漏一个就会按返回键直接退出 App
-  const sheets = ['sheet', 'trip-sheet', 'log-sheet', 'loc-sheet', 'diag-sheet',
-                  'model-sheet', 'pin-sheet', 'raw-sheet', 'tank-sheet', 'check-sheet'];
-  for (let i = sheets.length - 1; i >= 0; i--) {
-    if (shown(sheets[i])) { $(sheets[i]).classList.remove('show'); return true; }
-  }
-  // 兜底：还有没列到的 .sheet 开着，关掉最上面那个
-  const open = document.querySelectorAll('.sheet.show');
-  if (open.length) { open[open.length - 1].classList.remove('show'); return true; }
-  if (moreOpen) { setMore(false); return true; }
-  if (sortMode) { setSortMode(false); return true; }
-  return false;
-};
-
 (function boot() {
   renderGrid();
   bindLogin();

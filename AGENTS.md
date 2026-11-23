@@ -17,7 +17,7 @@
 
 ## 当前版本
 
-`0.19`（build 18）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
+`0.20`（build 19）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
 
 ```
 project.yml:  MARKETING_VERSION / CURRENT_PROJECT_VERSION
@@ -45,7 +45,7 @@ cd /1000/AI/icar-mod/ios-native
 
 装到手机：Sideloadly + 免费 Apple ID（7 天有效），需开开发者模式并信任证书。
 
-## 已完成（v0.19）
+## 已完成（v0.20）
 
 - 手机号 + 验证码登录，token 存 Keychain
 - 车况首页（油量/续航/车速/温度/车锁/空调/里程/门窗天窗）
@@ -56,6 +56,7 @@ cd /1000/AI/icar-mod/ios-native
 - 设置：控车码、二次确认、强调色、抖音入口、更新提示、调试信息
 - v0.8 修车况空：`/app2/api/car/data` 改成 POST（GET 现在回 40005），错误弹窗带 code/msg
 - v0.9 二级页（设置/轨迹/全景）右上角加 X 关闭按钮，所有弹层显示拖拽条
+- v0.20：瘦身（删 1844 行死代码 + 无用资源）、WebView 崩溃恢复、键盘/缓存/固定端口/流式发送/写盘防抖/日志落盘
 - v0.19：360 拍照/列表回空时保留旧数据，不再显示成“照片没了”
 - v0.18：POST 空 body 对齐安卓（修定位 500）、错误带服务端原文、拍照列表错误可见
 - v0.17：出包自动发 GitHub Release + 自动改 update/version.json（更新链接自动推送）

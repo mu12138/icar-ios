@@ -22,9 +22,44 @@ final class NativeBridge: NSObject {
     /// 正在等选图结果的 JS 回调 id
     private var bgCbId = ""
 
+    override init() {
+        super.init()
+        // 切后台前把防抖里的偏好全部落盘，别丢
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                self?.flushKV()
+            }
+    }
+
     private let kvSuite = "icar_web"
     private let gateSuite = "gate"
     private var kv: UserDefaults { UserDefaults(suiteName: kvSuite) ?? .standard }
+
+    /// 偏好写盘防抖：拖滑块时 JS 每帧都在 kvSet，攒 250ms 再一次性落盘
+    private var kvPending: [String: String] = [:]
+    private var kvFlushWork: DispatchWorkItem?
+
+    private func kvSet(_ key: String, _ value: String) {
+        kvPending[key] = value
+        kvFlushWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.flushKV() }
+        kvFlushWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
+    }
+
+    private func kvValue(_ key: String) -> String {
+        if let v = kvPending[key] { return v }
+        return kv.string(forKey: key) ?? ""
+    }
+
+    func flushKV() {
+        guard !kvPending.isEmpty else { return }
+        let snap = kvPending
+        kvPending.removeAll()
+        let d = kv
+        snap.forEach { d.set($0.value, forKey: $0.key) }
+    }
     private var gate: UserDefaults { UserDefaults(suiteName: gateSuite) ?? .standard }
 
     // MARK: - 注入给页面的 window.Native
@@ -90,7 +125,7 @@ final class NativeBridge: NSObject {
         case "state": return stateJSON()
         case "kvGet":
             let k = args.first as? String ?? ""
-            return kv.string(forKey: k) ?? ""
+            return kvValue(k)
         case "version": return versionString()
         case "pinCode": return Store.get("pinCode") ?? ""
         case "acDiag": return lastAcLog
@@ -125,6 +160,8 @@ final class NativeBridge: NSObject {
     func handle(message: String, args: [Any]) async {
         let cb = args.last as? String ?? ""
         let carId = args.first as? String ?? ""
+        let argDesc = args.map { "\($0)" }.joined(separator: ",")
+        DebugLog.shared.add("JS·\(message) [\(argDesc.prefix(60))]")
         switch message {
         case "kvSet":
             let k = args.first as? String ?? ""
@@ -133,7 +170,7 @@ final class NativeBridge: NSObject {
                 if let str = args[1] as? String { v = str }
                 else if let n = args[1] as? NSNumber { v = n.stringValue }
             }
-            kv.set(v, forKey: k)
+            kvSet(k, v)
             return
         case "setPinCode":
             var s = (args.first as? String ?? "").filter(\.isNumber)
@@ -267,7 +304,7 @@ final class NativeBridge: NSObject {
             break   // 网页自己有提示条，不再叠一层系统 toast
         case "keepAlive":
             let on = (args.first as? NSNumber)?.boolValue ?? false
-            kv.set(on ? "1" : "0", forKey: "icar.keep")
+            kvSet("icar.keep", on ? "1" : "0")
         case "pickBg":
             await MainActor.run { self.presentBgPicker(cb: cb) }
         case "clearBg":
@@ -304,14 +341,14 @@ final class NativeBridge: NSObject {
         var o: [String: Any] = [:]
         let fuelL = num(d, "fuelLeftover")
         let reported = intVal(d, "remainingFuel")
-        let tank = Double(kv.string(forKey: "icar.tankL") ?? "") ?? 50
+        let tank = Double(kvValue("icar.tankL")) ?? 50
         var fuelLocal = reported
         if fuelL > 0, tank > 0 { fuelLocal = Int((fuelL / tank * 100).rounded()) }
         fuelLocal = max(0, min(100, fuelLocal))
         o["fuelServer"] = max(0, min(100, reported))
         o["fuelLocal"] = fuelLocal
         o["fuelLiter"] = fuelL > 0 ? fuelL : 0
-        let useLocal = (kv.string(forKey: "icar.dataSource") ?? "local") != "server"
+        let useLocal = (kvValue("icar.dataSource").isEmpty ? "local" : kvValue("icar.dataSource")) != "server"
         o["fuel"] = useLocal ? fuelLocal : max(0, min(100, reported))
 
         o["range"] = intVal(d, "remainedOilMile")

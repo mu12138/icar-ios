@@ -153,12 +153,6 @@ enum ChangAnAPI {
 
     // MARK: - 车况
 
-    static func status() async throws -> CarStatus {
-        let d = try await statusRaw()
-        DebugLog.shared.add("车况字段数 \(d.count)")
-        return CarStatus(raw: d)
-    }
-
     /// 车况原始 data（网页版桥用，按安卓 statusJson 的口径自己组装）
     static func statusRaw() async throws -> [String: Any] {
         let carId = Store.get("carId") ?? ""

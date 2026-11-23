@@ -1,40 +1,58 @@
 import Foundation
 
-/// 简单的环形日志，出问题时把内容截图给开发者
-final class DebugLog: ObservableObject {
+/// 调试日志：内存留最近 120 行，同时落一份到 `Documents/bridge.log`。
+/// 出问题直接去 Files App 里取这个文件，比截图快。
+final class DebugLog {
     static let shared = DebugLog()
-    @Published private(set) var lines: [String] = []
+
     private let lock = NSLock()
+    private var lines: [String] = []
+    private let fileQueue = DispatchQueue(label: "cn.icar.debuglog.file")
+
+    static var fileURL: URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return docs.appendingPathComponent("bridge.log")
+    }
 
     func add(_ s: String) {
-        let t = DateFormatter()
-        t.dateFormat = "HH:mm:ss"
-        let line = "[\(t.string(from: Date()))] \(s)"
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        let line = "[\(f.string(from: Date()))] \(s)"
         lock.lock()
         lines.append(line)
         if lines.count > 120 { lines.removeFirst(lines.count - 120) }
         lock.unlock()
-        DispatchQueue.main.async { self.objectWillChange.send() }
-    }
-
-    func clear() {
-        lock.lock(); lines.removeAll(); lock.unlock()
-        DispatchQueue.main.async { self.objectWillChange.send() }
+        appendToFile(line)
     }
 
     var text: String {
         lock.lock(); defer { lock.unlock() }
         return lines.joined(separator: "\n")
     }
-}
 
-/// 数值解析：车端可能给数字、字符串或 null
-func num(_ v: Any?) -> Double {
-    if let n = v as? NSNumber { return n.doubleValue }
-    if let s = v as? String {
-        let t = s.trimmingCharacters(in: .whitespaces)
-        if t.isEmpty || t.lowercased() == "null" { return 0 }
-        return Double(t) ?? 0
+    func clear() {
+        lock.lock(); lines.removeAll(); lock.unlock()
+        fileQueue.async { try? FileManager.default.removeItem(at: Self.fileURL) }
     }
-    return 0
+
+    /// 超过 400KB 只留后半段，别把手机撑爆
+    private func appendToFile(_ line: String) {
+        let url = Self.fileURL
+        let data = Data((line + "\n").utf8)
+        fileQueue.async {
+            let fm = FileManager.default
+            if let attrs = try? fm.attributesOfItem(atPath: url.path),
+               let size = attrs[.size] as? NSNumber, size.intValue > 400_000,
+               let old = try? Data(contentsOf: url) {
+                try? Data(old.suffix(200_000)).write(to: url)
+            }
+            if let h = try? FileHandle(forWritingTo: url) {
+                h.seekToEndOfFile()
+                h.write(data)
+                try? h.close()
+            } else {
+                try? data.write(to: url)
+            }
+        }
+    }
 }
