@@ -11,13 +11,13 @@
 
 - 项目：`/1000/AI/icar-mod/ios-native`（fnOS「我的文件/AI/icar-mod/ios-native」）
 - 仓库：`https://github.com/mu12138/icar-ios`（分支 `main`，公开）
-- 安卓参考实现：`/1000/AI/icar-mod/localapp`
+- 安卓参考实现：`/1000/AI/icar-mod/localapp`（**只作参考**：iOS 的 `iCar/WebUI` 是独立分支，两边分开更新，别互相覆盖）
 - 出包落点：`/1000/AI/icar-mod/分享/` 和夸克网盘根目录 **iOS 测试版**
   （挂载路径 `/1000-1-e8adecdf/iOS 测试版`，可直接写）
 
 ## 当前版本
 
-`0.14`（build 13）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
+`0.15`（build 14）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
 
 ```
 project.yml:  MARKETING_VERSION / CURRENT_PROJECT_VERSION
@@ -43,7 +43,7 @@ cd /1000/AI/icar-mod/ios-native
 
 装到手机：Sideloadly + 免费 Apple ID（7 天有效），需开开发者模式并信任证书。
 
-## 已完成（v0.14）
+## 已完成（v0.15）
 
 - 手机号 + 验证码登录，token 存 Keychain
 - 车况首页（油量/续航/车速/温度/车锁/空调/里程/门窗天窗）
@@ -54,6 +54,7 @@ cd /1000/AI/icar-mod/ios-native
 - 设置：控车码、二次确认、强调色、抖音入口、更新提示、调试信息
 - v0.8 修车况空：`/app2/api/car/data` 改成 POST（GET 现在回 40005），错误弹窗带 code/msg
 - v0.9 二级页（设置/轨迹/全景）右上角加 X 关闭按钮，所有弹层显示拖拽条
+- v0.15：iOS 网页独立（不再同步安卓），已物理删除通知触发/语音/后台常驻/指令写法等源码
 - v0.14：自定义背景图（PHPicker → Documents/bg.jpg → /__bg.jpg）+ 9 套预设主题（THEMES/bg）
 - v0.13：加 AppIcon（安卓同款车侧影）；单张 1024 通用图标，透明底压黑
 - v0.12：iOS 隐藏通知触发/语音入口/后台常驻等安卓专属设置（`WebUIView.iosHideJS`）；360 拍照改「先刷列表」；ATS 允许明文

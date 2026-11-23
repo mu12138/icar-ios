@@ -19,6 +19,18 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.15 (14)
+- **iOS 网页改成独立一套**：`iCar/WebUI/` 是 iOS 自己的分支，不再从安卓 `core/assets/web`
+  同步覆盖；安卓改动不会自动过来，iOS 这边想加功能手动挑。
+- 直接从 iOS 那份源码里删掉用不到的功能（不再是运行时藏）：
+  - 设置页：通知触发、后台常驻、锁屏保护、通知使用权、通知记录、自启动、省电策略、
+    「语音触发」标题和抖音按钮、「指令写法」列表、小组件自动刷新
+  - 弹层：通知记录面板（`#ntf-sheet`）
+  - JS：`openNtfLog / ntfOn / watchAuth / paintNtf`、通知使用权轮询、`Native.keepAlive`、
+    指令写法复制、`#dy-home` 绑定
+  - `app.js` 过了 `node --check`，全文已无这些 id/函数引用
+- 顺带去掉上一版那段运行时隐藏的注入脚本（不再需要）。
+
 ### v0.14 (13)
 - **自定义主题 / 背景在 iOS 上真能用了**（之前 `pickBg` 是空实现，点了没反应）：
   - 「选择背景图片」走系统 PHPicker，选完压到长边 1600 存成 `Documents/bg.jpg`，

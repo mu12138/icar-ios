@@ -302,10 +302,6 @@
           <div class="chip" data-rs="0">不自动</div>
         </div>
       </div>
-      <div class="set-row" data-k="widgetNet" data-def="0">
-        <div class="set-txt"><b>小组件自动刷新</b><span>关掉后小组件只显示上次的数据，不再联网唤醒车机</span></div>
-        <div class="switch" id="sw-widgetnet"><i></i></div>
-      </div>
       <div class="set-row" data-k="confirm">
         <div class="set-txt"><b>操作二次确认</b><span>点快捷指令、开关空调前先问一句「确定执行吗」</span></div>
         <div class="switch" id="sw-confirm"><i></i></div>
@@ -327,45 +323,6 @@
         <div class="switch" id="sw-loc"><i></i></div>
       </div>
     </div>
-    <div class="set-hd hd-row">
-      <span>语音触发 · 加入抖音群查看使用教程</span>
-      <button class="hd-link" id="dy-home">我的抖音主页 ›</button>
-    </div>
-    <div class="set-list">
-      <div class="set-row" data-k="ntf">
-        <div class="set-txt"><b>通知触发</b><span>通知里出现指令名就下发，如 openAir</span></div>
-        <div class="switch" id="sw-ntf"><i></i></div>
-      </div>
-      <div class="set-row" data-k="keep">
-        <div class="set-txt"><b>后台常驻</b><span>打开后会在通知栏常驻，防止划掉后台后通知监听失效</span></div>
-        <div class="switch" id="sw-keep"><i></i></div>
-      </div>
-      <div class="set-row" data-k="ntfSafe" data-def="0">
-        <div class="set-txt"><b>锁屏保护</b><span>锁屏时忽略开门、开窗、启动</span></div>
-        <div class="switch" id="sw-ntfsafe"><i></i></div>
-      </div>
-      <div class="set-row" data-act="auth">
-        <div class="set-txt"><b>通知使用权</b><span id="ntf-auth">检测中…</span></div>
-        <span class="go" id="ntf-go">去授权</span>
-      </div>
-      <div class="set-row" data-act="ntflog">
-        <div class="set-txt"><b>通知记录</b><span>最近收到的通知，排查某个 App 有没有被监听到</span></div>
-        <span class="go">查看</span>
-      </div>
-    </div>
-    <div class="set-hd">后台权限 · 建议开启</div>
-    <div class="set-list">
-      <div class="set-row" data-act="perm">
-        <div class="set-txt"><b>自启动</b><span>不打开的话，划掉后台后常驻服务可能拉不回来</span></div>
-        <span class="go">去设置</span>
-      </div>
-      <div class="set-row" data-act="perm">
-        <div class="set-txt"><b>省电策略 · 无限制</b><span>省电策略会定期清理后台，选「无限制」才能长期挂着</span></div>
-        <span class="go">去设置</span>
-      </div>
-    </div>
-    <div class="set-hd">指令写法 · 点一下复制</div>
-    <div class="cmd-list" id="cmd-list"></div>
     <div class="set-hd">车辆模型</div>
     <div class="model-note" id="model-note">--</div>
     <div class="paint-hd">车漆</div>
@@ -402,20 +359,6 @@
     <div class="cf-btns">
       <button class="cf-btn" id="cf-no">取消</button>
       <button class="cf-btn ok" id="cf-yes">执 行</button>
-    </div>
-  </div>
-</div>
-
-<div class="sheet" id="ntf-sheet">
-  <div class="sheet-hd">
-    <span>通知记录</span>
-    <span class="sheet-x" id="ntf-x">关闭</span>
-  </div>
-  <div class="sheet-bd">
-    <div class="raw-note">最近 20 条通知（不管有没有命中指令都会留一行）。如果你在米家里触发了自动化，这里没有对应记录，说明通知根本没到 App。</div>
-    <pre class="raw-pre" id="ntf-pre">读取中…</pre>
-    <div class="th-btns" style="margin-top:14px">
-      <button class="th-btn" id="ntf-clear">清空记录</button>
     </div>
   </div>
 </div>

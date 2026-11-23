@@ -163,7 +163,6 @@ function chooseModel(key) {
 
 function renderModelSheet() {
   paintSwitches();
-  paintNtf();
   let st = {};
   try { st = api.state(); } catch (e) {}
   const auto = detectModelKey(st.seriesCode);
@@ -302,7 +301,6 @@ function toggleSetting(row) {
   const k = row.dataset.k;
   const next = !rowOn(row);
   store.set('icar.' + k, next ? '1' : '0');
-  if (k === 'keep' && hasNative) { try { Native.keepAlive(next); } catch (e) {} }
   paintSwitches();
   applyVisibility();
   // 刚打开的功能，顺手把数据拉一次
@@ -311,108 +309,19 @@ function toggleSetting(row) {
   if (next && k === 'show.loc') loadLocation();
 }
 
-/** 通知记录：最近收到过的通知，排查某个 App 到底有没有被监听到 */
-function openNtfLog() {
-  const pre = $('ntf-pre');
-  let t = '';
-  if (hasNative) { try { t = Native.ntfLog() || ''; } catch (e) {} }
-  pre.textContent = t || '还没有记录。';
-  $('ntf-sheet').classList.add('show');
-}
-
-/** 点了「通知使用权」之后盯一会儿：开成功就提示，没开成功就给受限设置的引导 */
-let authPoll = null, authHinted = false;
-
-function ntfOn() {
-  let on = '0';
-  try { on = Native.ntfState(); } catch (e) {}
-  return on === '1';
-}
-
-function watchAuth() {
-  if (!hasNative) return;
-  authHinted = false;
-  if (authPoll) clearInterval(authPoll);
-  let n = 0;
-  authPoll = setInterval(() => {
-    if (++n > 100) { clearInterval(authPoll); authPoll = null; return; }
-    if (ntfOn()) {
-      clearInterval(authPoll); authPoll = null;
-      paintNtf();
-      toast('通知使用权已开启');
-    }
-  }, 1000);
-}
-
-// 从系统设置页切回来还没开成功：多半是被「受限设置」挡了
-window.addEventListener('focus', () => {
-  if (!authPoll) return;
-  setTimeout(() => {
-    if (!authPoll || authHinted || ntfOn()) return;
-    authHinted = true;
-    askConfirm('开关是灰的？',
-      '澎湃 OS 对侧载安装的 APP 做了「受限设置」，通知使用权的开关会被禁用。\n' +
-      '到 应用信息 → 右上角 ⋮ → 允许受限设置，再回来开启即可。',
-      '去应用信息页').then(ok => {
-        if (ok && hasNative) { try { Native.openAppSettings(); } catch (e) {} }
-      });
-  }, 800);
-});
-
-/** 通知使用权状态 + 指令写法列表（一条一条，点哪条复制哪条） */
-function paintNtf() {
-  const a = $('ntf-auth'), box = $('cmd-list'), go = $('ntf-go');
-  if (go) go.textContent = ntfOn() ? '已开启' : '去授权';
-  if (a) {
-    if (!hasNative) {
-      a.textContent = '仅手机端可用';
-    } else {
-      a.textContent = ntfOn() ? '已授权' : '未授权，点这里开启';
-    }
-  }
-  if (!box) return;
-  let list = '';
-  if (hasNative) { try { list = Native.ntfCmds(); } catch (e) {} }
-  if (!list) { box.innerHTML = ''; return; }
-  box.innerHTML = list.split(' ').map(x => {
-    const p = x.split('|');
-    return `<div class="cmd-row" data-cmd="${p[0]}"><b>${p[1] || ''}</b><span>${p[0]}</span></div>`;
-  }).join('');
-}
-
 function bindSettings() {
   document.querySelectorAll('.set-row').forEach(row => {
     row.addEventListener('click', () => {
       const act = row.dataset.act;
-      if (act === 'ntflog') { openNtfLog(); return; }
       if (act === 'theme') {
         syncThemeUI();
         $('theme-sheet').classList.add('show');
-        return;
-      }
-      if (act === 'perm') {
-        if (!hasNative) return;
-        try { Native.openAppSettings(); } catch (e) {}
-        return;
-      }
-      if (act === 'auth') {
-        if (!hasNative) return toast('仅手机端可用');
-        if (ntfOn()) { toast('通知使用权已开启'); paintNtf(); return; }
-        try { Native.ntfOpen(); } catch (e) {}
-        setTimeout(paintNtf, 900);
-        watchAuth();
         return;
       }
       if (row.dataset.k) toggleSetting(row);
     });
   });
 
-  const box = $('cmd-list');
-  if (box) box.addEventListener('click', e => {
-    const r = e.target.closest('.cmd-row');
-    if (!r || !hasNative) return;
-    try { Native.ntfCopyCmd(r.dataset.cmd); } catch (err) {}
-  });
 }
 
 // ---- 二次确认 ----
@@ -1330,14 +1239,6 @@ function bindRaw() {
   foot.addEventListener('click', e => { if (fired) { e.preventDefault(); e.stopPropagation(); } });
   const x = $('raw-x');
   if (x) x.addEventListener('click', () => $('raw-sheet').classList.remove('show'));
-  const nx = $('ntf-x');
-  if (nx) nx.addEventListener('click', () => $('ntf-sheet').classList.remove('show'));
-  const nc = $('ntf-clear');
-  if (nc) nc.addEventListener('click', () => {
-    if (hasNative) { try { Native.ntfClearLog(); } catch (e) {} }
-    $('ntf-pre').textContent = '还没有记录。';
-    toast('已清空通知记录', 'ok');
-  });
 
 }
 
@@ -2504,13 +2405,6 @@ function start() {
 function bindGate() {
   const inp = $('gate-input'), btn = $('gate-btn');
 
-  // 设置里「我的抖音主页」跳转
-  const dyHome = $('dy-home');
-  if (dyHome) dyHome.addEventListener('click', () => {
-    try { Native.openUrl('https://v.douyin.com/V-ceQdCsRA4/'); }
-    catch (e) { toast('没有可以打开抖音的应用', 'err'); }
-  });
-
   // 抖音主页：只放一个按钮，链接不外露
   const dy = $('gate-douyin');
   if (dy) dy.addEventListener('click', () => {
@@ -2885,7 +2779,7 @@ window.__back = function () {
   if (shown('lightbox')) { $('lightbox').classList.remove('show'); return true; }
   // 所有二级弹层都关一遍；漏一个就会按返回键直接退出 App
   const sheets = ['sheet', 'trip-sheet', 'log-sheet', 'loc-sheet', 'diag-sheet',
-                  'model-sheet', 'ntf-sheet', 'pin-sheet', 'raw-sheet', 'tank-sheet', 'check-sheet'];
+                  'model-sheet', 'pin-sheet', 'raw-sheet', 'tank-sheet', 'check-sheet'];
   for (let i = sheets.length - 1; i >= 0; i--) {
     if (shown(sheets[i])) { $(sheets[i]).classList.remove('show'); return true; }
   }
