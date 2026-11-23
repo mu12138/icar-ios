@@ -162,6 +162,12 @@ final class NativeBridge: NSObject {
         let carId = args.first as? String ?? ""
         let argDesc = args.map { "\($0)" }.joined(separator: ",")
         DebugLog.shared.add("JS·\(message) [\(argDesc.prefix(60))]")
+
+        // 网页资源被改过（换包/改指令）：界面照常，但控车类指令一律失败
+        if Hardening.assetsTampered, ["exec", "air", "airOff", "capture"].contains(message) {
+            send(cb, ok: false, msg: "执行失败，请稍后重试")
+            return
+        }
         switch message {
         case "kvSet":
             let k = args.first as? String ?? ""

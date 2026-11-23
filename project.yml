@@ -8,6 +8,16 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     DEVELOPMENT_TEAM: ""
+    # 硬化：体积优化 + 去符号 + 裁死代码（发布包用）
+    SWIFT_OPTIMIZATION_LEVEL: "-Osize"
+    SWIFT_COMPILATION_MODE: wholemodule
+    DEAD_CODE_STRIPPING: YES
+    DEPLOYMENT_POSTPROCESSING: YES
+    STRIP_INSTALLED_PRODUCT: YES
+    STRIP_STYLE: all
+    ENABLE_TESTABILITY: NO
+    ENABLE_NS_ASSERTIONS: NO
+    GCC_SYMBOLS_PRIVATE_EXTERN: YES
 targets:
   iCar:
     type: application
@@ -31,8 +41,8 @@ targets:
         CFBundleDevelopmentRegion: zh_CN
         # 版本号：和下面的 MARKETING_VERSION / CURRENT_PROJECT_VERSION 保持一致
         # （release-ios.sh 会一起改，别只改一处）
-        CFBundleShortVersionString: "0.20"
-        CFBundleVersion: "19"
+        CFBundleShortVersionString: "0.21"
+        CFBundleVersion: "20"
         UILaunchScreen: {}
         UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations:
@@ -55,8 +65,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cn.icar.native
         PRODUCT_NAME: iCar
-        MARKETING_VERSION: "0.20"
-        CURRENT_PROJECT_VERSION: "19"
+        MARKETING_VERSION: "0.21"
+        CURRENT_PROJECT_VERSION: "20"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Manual

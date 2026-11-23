@@ -7,6 +7,7 @@ struct iCarApp: App {
         URLCache.shared = URLCache(memoryCapacity: 32 << 20,
                                    diskCapacity: 256 << 20,
                                    diskPath: "icar-cache")
+        Hardening.start()
     }
 
     var body: some Scene {

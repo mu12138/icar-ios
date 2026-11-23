@@ -18,6 +18,9 @@ jobs:
       - name: 安装 XcodeGen
         run: brew install xcodegen
 
+      - name: 生成网页资源哈希
+        run: python3 scripts/gen-web-hashes.py
+
       - name: 生成工程
         run: xcodegen generate
 

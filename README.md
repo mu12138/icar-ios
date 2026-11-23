@@ -19,6 +19,16 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.21 (20)
+轻量加固（不改变功能）：
+
+- **构建期**：`-Osize`、whole-module 编译、`DEAD_CODE_STRIPPING`、`DEPLOYMENT_POSTPROCESSING`、
+  `STRIP_INSTALLED_PRODUCT` + `STRIP_STYLE=all` 去符号、关闭 testability / NSAssert。
+- **资源完整性自检**：构建时由 `scripts/gen-web-hashes.py` 把 `WebUI` 里 5 个关键文件
+  （index.html / app.js / viewer3d.js / overlay.js / app.css）的 SHA-256 写进 `iCar/WebHashes.swift`；
+  App 启动比对，改过就按安卓那套 C 方案：**界面照常，控车指令直接返回「执行失败，请稍后重试」**。
+- **环境探测**：调试器附加（P_TRACED）、常见越狱路径——只写日志，不阻断（避免误伤正常用户）。
+
 ### v0.20 (19)
 一次整体瘦身 + 稳一稳，功能没动：
 
