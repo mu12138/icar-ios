@@ -26,11 +26,13 @@ project.yml:  CFBundleShortVersionString / CFBundleVersion（在 info.properties
 
 只改前两个会出现「装上去显示 0.3」这种问题（0.5/0.6 就是踩了这个坑，已删）。
 
-## 出包
+## 出包（不自动推更新）
 
 ```bash
 cd /1000/AI/icar-mod/ios-native
 ./release-ios.sh 0.8      # 升到 0.8 并出包；不带参数 = 用当前版本重编
+./push-update.sh <版本> <build> <链接>  # 需要时手动推更新提示
+./push-notice.sh "公告文字" [链接]      # 需要时手动发公告
 ```
 
 脚本做四件事：改版本号 → commit & push → 等 GitHub Actions（macos-15，xcodegen，不签名）→

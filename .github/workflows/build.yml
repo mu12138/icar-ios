@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - 'update/**'
       - '*.md'
+      - '*.sh'
   workflow_dispatch:
 
 jobs:

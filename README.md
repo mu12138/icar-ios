@@ -129,6 +129,21 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 ### v0.5 (4)
 - 内部测试版，版本号有误，已删除。
 
+## 更新提示 / 公告（按需推送，不自动）
+
+**默认不推**：`release-ios.sh` 出包只发 GitHub Release，不动 `update/version.json`，
+所以装着的 App 不会弹「有新版本」。
+
+要推的时候（用户给了下载链接再跑）：
+
+```bash
+./push-update.sh 0.18 17 https://下载链接 "说明文字"   # 推更新提示
+./push-notice.sh "公告文字" [跳转链接] [按钮文字]        # 发公告（可与更新同时存在）
+```
+
+两个脚本只改 iOS 仓库里的 `update/version.json`（jsDelivr + raw 双源），
+安卓的 `mu12138s/icar-update` 完全不动，发 iOS 的公告/更新不会影响安卓。
+
 ## 怎么编译
 
 没有 Mac 也能编，用 GitHub Actions 的免费 macOS 机器。
