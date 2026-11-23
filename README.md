@@ -19,6 +19,15 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.17 (16)
+- **iOS 更新链接打通（不再需要手动填 url）**：`release-ios.sh` 现在出包后自动做两件事：
+  1. 发 GitHub Release（tag `v0.xx`），资产固定命名 `iCar-unsigned.ipa`；
+  2. 把 `update/version.json` 的 `code/version/url/note` 自动改成这次的新版本，
+     `url` 固定指向 `https://github.com/mu12138/icar-ios/releases/latest/download/iCar-unsigned.ipa`，
+     老版本打开 App 就会弹「有新版本 → 去下载」。
+- `update/**` 和 `*.md` 的提交不再触发重新编译（workflow `paths-ignore`）。
+- 拉取顺序调成 raw 优先、jsDelivr 兜底（raw 拿到的永远是最新，jsDelivr 给国内兜网速）。
+
 ### v0.16 (15)
 - **公告功能加上，而且跟安卓完全分开**：
   - iOS 的版本/公告源改成自己仓库里的 `update/version.json`

@@ -59,5 +59,51 @@ mkdir -p "$QUARK"
 cp "$TMP/iCar-unsigned.ipa" "$QUARK/$NAME"
 sync
 
+# ---- 发到 GitHub Release，给 App 里的「去下载」用 ----
+# 资产固定叫 iCar-unsigned.ipa，链接就能长期不变：
+# https://github.com/mu12138/icar-ios/releases/latest/download/iCar-unsigned.ipa
+REL_TAG="v$VER"
+UP="$TMP/upload"; rm -rf "$UP"; mkdir -p "$UP"
+cp "$TMP/iCar-unsigned.ipa" "$UP/iCar-unsigned.ipa"
+if gh release view "$REL_TAG" >/dev/null 2>&1; then
+  gh release upload "$REL_TAG" "$UP/iCar-unsigned.ipa" --clobber
+else
+  gh release create "$REL_TAG" "$UP/iCar-unsigned.ipa" \
+    --title "v$VER ($BUILD)" \
+    --notes "未签名 ipa，用 Sideloadly + 免费 Apple ID 安装（7 天有效）"
+fi
+
+# ---- 更新 App 自己读的那份 version.json（iOS 独立，不动安卓） ----
+python3 - "$BUILD" "$VER" <<'PYEOF'
+import json, sys
+build, ver = sys.argv[1], sys.argv[2]
+p = 'update/version.json'
+try:
+    d = json.load(open(p))
+except Exception:
+    d = {}
+d['code'] = int(build)
+d['version'] = ver
+d['url'] = 'https://github.com/mu12138/icar-ios/releases/latest/download/iCar-unsigned.ipa'
+d['note'] = '未签名 ipa，用 Sideloadly 安装（7 天有效）'
+d.setdefault('code_text', '')
+d.setdefault('notice', '')
+d.setdefault('notice_url', '')
+d.setdefault('notice_btn', '')
+json.dump(d, open(p, 'w'), ensure_ascii=False, indent=2)
+open(p, 'a').write('\n')
+PYEOF
+
+git add update/version.json
+if ! git diff --cached --quiet; then
+  git commit -q -m "版本源：v$VER ($BUILD)"
+  for i in 1 2 3; do
+    git push -q origin main && break
+    [ "$i" = 3 ] && echo "version.json push 失败（不影响 install，手动推一次）"
+    sleep 3
+  done
+fi
+
 echo "== 完成 =="
 ls -lh "$SHARE/$NAME" "$QUARK/$NAME"
+gh release view "$REL_TAG" --json tagName,assets -q '.tagName + " → " + (.assets[0].name // "-")' 2>/dev/null || true
