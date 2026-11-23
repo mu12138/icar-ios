@@ -432,8 +432,9 @@ final class NativeBridge: NSObject {
         ]
         for u in urls {
             guard let url = URL(string: u) else { continue }
-            var req = URLRequest(url: url, timeoutInterval: 4,
-                                 cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
+            var req = URLRequest(url: url,
+                                 cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+                                 timeoutInterval: 4)
             req.setValue("application/json", forHTTPHeaderField: "Accept")
             guard let (data, resp) = try? await URLSession.shared.data(for: req),
                   (resp as? HTTPURLResponse)?.statusCode == 200,
