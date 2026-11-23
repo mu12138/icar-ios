@@ -217,10 +217,22 @@ final class NativeBridge: NSObject {
             }
         case "capture":
             await reply(cb) {
-                let r = try await ChangAnAPI.exec("photograph")
-                try? await Task.sleep(nanoseconds: 2_500_000_000)
-                let raw = try await ChangAnAPI.panoramaRaw()
-                return Self.json(self.groupPhotos(raw)) + "|" + r
+                // 拍照不跟着指令轮询走：下发完就先去拉列表（车端上传要几秒），
+                // 列表空就再等一轮，避免 iOS 上一直卡在「拍摄中…」二十秒。
+                var msg = "已下发"
+                do {
+                    let tid = try await ChangAnAPI.dispatch("photograph")
+                    msg = tid.isEmpty ? "已下发" : "已下发，等车端上传"
+                } catch {
+                    msg = "指令返回：" + error.localizedDescription
+                }
+                var raw: [[String: Any]] = []
+                for i in 0..<4 {
+                    try? await Task.sleep(nanoseconds: UInt64(i == 0 ? 4 : 3) * 1_000_000_000)
+                    raw = (try? await ChangAnAPI.panoramaRaw()) ?? []
+                    if !raw.isEmpty { break }
+                }
+                return Self.json(self.groupPhotos(raw)) + "|" + msg
             }
         case "updateInfo":
             await reply(cb) {

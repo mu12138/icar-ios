@@ -17,7 +17,7 @@
 
 ## 当前版本
 
-`0.11`（build 10）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
+`0.12`（build 11）。改动必须升版本号，**四个字段一起改**（`release-ios.sh` 会自动改）：
 
 ```
 project.yml:  MARKETING_VERSION / CURRENT_PROJECT_VERSION
@@ -43,7 +43,7 @@ cd /1000/AI/icar-mod/ios-native
 
 装到手机：Sideloadly + 免费 Apple ID（7 天有效），需开开发者模式并信任证书。
 
-## 已完成（v0.11）
+## 已完成（v0.12）
 
 - 手机号 + 验证码登录，token 存 Keychain
 - 车况首页（油量/续航/车速/温度/车锁/空调/里程/门窗天窗）
@@ -54,6 +54,7 @@ cd /1000/AI/icar-mod/ios-native
 - 设置：控车码、二次确认、强调色、抖音入口、更新提示、调试信息
 - v0.8 修车况空：`/app2/api/car/data` 改成 POST（GET 现在回 40005），错误弹窗带 code/msg
 - v0.9 二级页（设置/轨迹/全景）右上角加 X 关闭按钮，所有弹层显示拖拽条
+- v0.12：iOS 隐藏通知触发/语音入口/后台常驻等安卓专属设置（`WebUIView.iosHideJS`）；360 拍照改「先刷列表」；ATS 允许明文
 - **v0.11 主界面改为安卓同款网页界面**：`iCar/WebUI/`（安卓 web 资源）+ `NativeBridge.swift`（38 个桥方法）+ `WebUIView.swift`（WKWebView 容器），SwiftUI 旧页保留但不再用
 - v0.10 控车提示分阶段：正在下发 → 已下发等回执 → 成功/失败，不再卡在「等待车端确认」
 
