@@ -231,12 +231,18 @@ final class NativeBridge: NSObject {
                     msg = "指令返回：" + error.localizedDescription
                 }
                 var raw: [[String: Any]] = []
+                var listErr = ""
                 for i in 0..<4 {
                     try? await Task.sleep(nanoseconds: UInt64(i == 0 ? 4 : 3) * 1_000_000_000)
-                    raw = (try? await ChangAnAPI.panoramaRaw()) ?? []
-                    if !raw.isEmpty { break }
+                    do {
+                        raw = try await ChangAnAPI.panoramaRaw()
+                        if !raw.isEmpty { break }
+                    } catch {
+                        listErr = error.localizedDescription
+                    }
                 }
-                return Self.json(self.groupPhotos(raw)) + "|" + msg
+                let tail = (raw.isEmpty && !listErr.isEmpty) ? "；照片列表：\(listErr)" : ""
+                return Self.json(self.groupPhotos(raw)) + "|" + msg + tail
             }
         case "updateInfo":
             await reply(cb) {

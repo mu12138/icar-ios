@@ -29,7 +29,7 @@ enum ChangAnAPI {
         req.setValue("inCall", forHTTPHeaderField: "vcs-app-id")
         req.setValue("cn.com.changan.cvim", forHTTPHeaderField: "X-Requested-With")
         req.setValue("okhttp/4.12.0", forHTTPHeaderField: "User-Agent")
-        if let form = form {
+        if let form = form, !form.isEmpty {
             req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
             req.httpBody = form
                 .map { "\(esc($0.key))=\(esc($0.value))" }
@@ -42,7 +42,8 @@ enum ChangAnAPI {
         let short = urlString.replacingOccurrences(of: base, with: "")
         DebugLog.shared.add("\(method) \(short.prefix(90)) → \(code) \(body.prefix(120))")
         guard (200..<300).contains(code) else {
-            throw APIError.bad("服务端返回 \(code)")
+            let head = body.prefix(120).replacingOccurrences(of: "\n", with: " ")
+            throw APIError.bad("服务端返回 \(code)" + (head.isEmpty ? "" : "：\(head)"))
         }
         return data
     }
@@ -136,9 +137,8 @@ enum ChangAnAPI {
                                 form: [String: String]? = nil) async throws -> [String: Any] {
         try await ensureToken()
         let token = Store.get("token") ?? ""
-        var body = form
+        let body = form
         var p = path.replacingOccurrences(of: "TOKEN", with: token)
-        if method == "POST", body == nil { body = ["token": token] }
         var d = try await send(base + p, method: method, form: body)
         var j = try json(d)
         if codeInt(j) == 2 {          // token 过期，刷新后重试一次

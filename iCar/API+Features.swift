@@ -16,8 +16,7 @@ extension ChangAnAPI {
     private static func authed(_ path: String, method: String = "GET",
                                form: [String: String]? = nil) async throws -> [String: Any] {
         try await ensureToken()
-        var body = form
-        if method == "POST", body == nil { body = ["token": token()] }
+        let body = form
         let p = path.replacingOccurrences(of: "TOKEN", with: token())
         var d = try await send(base + p, method: method, form: body)
         var j = try JSONSerialization.jsonObject(with: d) as? [String: Any] ?? [:]
