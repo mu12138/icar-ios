@@ -1,9 +1,9 @@
 {
-  "code": 15,
-  "version": "0.16",
-  "url": "",
+  "code": 16,
+  "version": "0.17",
+  "url": "https://github.com/mu12138/icar-ios/releases/latest/download/iCar-unsigned.ipa",
   "code_text": "",
-  "note": "",
+  "note": "未签名 ipa，用 Sideloadly 安装（7 天有效）",
   "notice": "",
   "notice_url": "",
   "notice_btn": ""
