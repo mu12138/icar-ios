@@ -313,6 +313,11 @@ function bindSettings() {
   document.querySelectorAll('.set-row').forEach(row => {
     row.addEventListener('click', () => {
       const act = row.dataset.act;
+      if (act === 'dyhome') {
+        try { Native.openUrl('https://v.douyin.com/V-ceQdCsRA4/'); }
+        catch (e) { toast('打不开抖音', 'err'); }
+        return;
+      }
       if (act === 'theme') {
         syncThemeUI();
         $('theme-sheet').classList.add('show');
