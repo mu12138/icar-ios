@@ -19,6 +19,14 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v1.1 (24)
+- 点「车辆位置」能跳第三方地图了：
+  - 装了**高德**（`iosamap://`）、**百度**（`baidumap://`）都给选项，三个都在就弹「用哪个地图导航」；
+  - 苹果地图用 `maps://` 判断（卸载了就不会再出现），一个都没有时落到高德网页版；
+  - Info.plist 加了 `LSApplicationQueriesSchemes`（iosamap / baidumap / maps），否则 `canOpenURL` 永远 false；
+  - 中文名称先百分号转义（之前 `URL(string:)` 遇到「我的车」直接返回 nil，这就是点了没反应的原因）。
+  - 坐标按 GCJ-02 传（高德 `dev=0`、百度 `coord_type=gcj02`）；如果实际有偏移，把高德改 `dev=1`、百度改 `coord_type=wgs84`。
+
 ### v1.0 (23)
 - 版本号正式改为 **1.0**（功能与 v0.23 一致，无其他改动）。
 

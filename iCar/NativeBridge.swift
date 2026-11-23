@@ -299,9 +299,7 @@ final class NativeBridge: NSObject {
         case "openMap":
             let lat = (args.first as? NSNumber)?.doubleValue ?? 0
             let lng = (args.count > 1 ? (args[1] as? NSNumber)?.doubleValue : nil) ?? 0
-            if let u = URL(string: "https://maps.apple.com/?ll=\(lat),\(lng)&q=我的车") {
-                await MainActor.run { UIApplication.shared.open(u) }
-            }
+            await MainActor.run { self.presentMapOptions(lat: lat, lng: lng) }
         case "openAppSettings":
             if let u = URL(string: UIApplication.openSettingsURLString) {
                 await MainActor.run { UIApplication.shared.open(u) }
@@ -633,6 +631,66 @@ extension NativeBridge: PHPickerViewControllerDelegate {
             }
             Task { @MainActor in self.send(cb, ok: ok, msg: msg) }
         }
+    }
+}
+
+// MARK: - 导航：第三方地图
+
+extension NativeBridge {
+    /// 点「车辆位置」时：装了高德/百度就给选择，苹果地图被卸载了也不会点不动。
+    /// 坐标按 GCJ-02 传（高德 dev=0、百度 coord_type=gcj02）；如果实际有偏移，
+    /// 把高德改成 dev=1、百度改成 coord_type=wgs84 即可。
+    @MainActor
+    func presentMapOptions(lat: Double, lng: Double) {
+        guard !(lat == 0 && lng == 0) else {
+            DebugLog.shared.add("openMap 坐标为空，忽略")
+            return
+        }
+        let coords = "\(lat),\(lng)"
+        // 中文要转义，否则 URL(string:) 会直接返回 nil（点了没反应就是这个原因）
+        let name = "我的车".addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "car"
+        var items: [(String, URL)] = []
+
+        if let u = URL(string: "iosamap://viewMap?sourceApplication=icar&poiname=\(name)&lat=\(lat)&lon=\(lng)&dev=0"),
+           UIApplication.shared.canOpenURL(u) {
+            items.append(("高德地图", u))
+        }
+        if let u = URL(string: "baidumap://map/marker?location=\(coords)&title=\(name)&content=\(name)&coord_type=gcj02&src=cn.icar.native"),
+           UIApplication.shared.canOpenURL(u) {
+            items.append(("百度地图", u))
+        }
+        if let u = URL(string: "maps://?ll=\(coords)&q=\(name)"),
+           UIApplication.shared.canOpenURL(u) {
+            items.append(("苹果地图", u))
+        }
+
+        // 一个装了就直接开，多个让用户选；全都没有就落到高德网页版
+        if items.count == 1 {
+            UIApplication.shared.open(items[0].1)
+            return
+        }
+        if items.isEmpty {
+            if let web = URL(string: "https://uri.amap.com/marker?position=\(lng),\(lat)&name=\(name)&coordinate=gaode&callnative=1") {
+                UIApplication.shared.open(web)
+            }
+            return
+        }
+        guard let vc = Self.topViewController() else {
+            UIApplication.shared.open(items[0].1)
+            return
+        }
+        let sheet = UIAlertController(title: "用哪个地图导航", message: nil, preferredStyle: .actionSheet)
+        for (name, url) in items {
+            sheet.addAction(UIAlertAction(title: name, style: .default) { _ in
+                UIApplication.shared.open(url)
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "取消", style: .cancel))
+        if let pop = sheet.popoverPresentationController {
+            pop.sourceView = vc.view
+            pop.sourceRect = CGRect(x: vc.view.bounds.midX, y: vc.view.bounds.maxY - 40, width: 1, height: 1)
+        }
+        vc.present(sheet, animated: true)
     }
 }
 
