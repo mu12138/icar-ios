@@ -19,6 +19,12 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.13 (12)
+- 加应用图标：`iCar/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`，
+  用的就是安卓那份「白色车侧影 + 黑底」图标（`/1000/AI/icar-mod/icon/final_icon_1024.png`），
+  透明底先压成纯黑（iOS 图标不能带 alpha），单张 1024 通用尺寸。
+- `project.yml` 设 `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`。
+
 ### v0.12 (11)
 - **隐掉 iOS 上用不了的设置项**（网页是安卓共用那份，用注入 JS 藏，不改原文件）：
   通知触发、后台常驻、锁屏保护、通知使用权、通知记录、自启动、省电策略、「语音触发」标题和
