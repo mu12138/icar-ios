@@ -1834,22 +1834,46 @@ function renderPano(groups) {
 }
 
 async function loadPhotos() {
-  try { renderPano(await api.photos()); }
-  catch (e) { $('pano-time').textContent = '读取失败'; }
+  try {
+    const list = await api.photos();
+    // 接口临时回空/异常时，保留上一次的列表，不要显示成「暂无照片」
+    if ((!list || !list.length) && panoGroups && panoGroups.length) {
+      $('pano-time').textContent = '暂未取到（显示上次）';
+      return;
+    }
+    renderPano(list);
+  } catch (e) {
+    if (panoGroups && panoGroups.length) $('pano-time').textContent = '读取失败（显示上次）';
+    else $('pano-time').textContent = '读取失败';
+  }
 }
 
 async function doCapture() {
   const b = $('btn-capture');
   if (b.disabled) return;
   b.disabled = true; b.textContent = '拍摄中…';
+  const before = panoGroups;                 // 先记住拍照前的列表
   try {
     const r = await api.capture();
     const i = r.lastIndexOf('|');
     const json = i > 0 ? r.slice(0, i) : r;
     const msg = i > 0 ? r.slice(i + 1) : '';
-    renderPano(JSON.parse(json));
-    toast('车外拍照：' + (msg || '已上传'), 'ok');
+    const list = JSON.parse(json);
+    // 车端没上传成功时服务端可能回空列表：别把原来能看的照片抹掉
+    if (!list || !list.length) {
+      if (before && before.length) {
+        renderPano(before);
+        toast('车端还没上传新照片，先显示原来的：' + (msg || ''), 'err');
+      } else {
+        renderPano([]);
+        toast('车外拍照：' + (msg || '车端还没返回照片'), 'err');
+      }
+    } else {
+      renderPano(list);
+      toast('车外拍照：' + (msg || '已上传'), 'ok');
+    }
   } catch (e) {
+    if (before && before.length) renderPano(before);
     toast('拍照失败：' + e.message, 'err');
   } finally {
     b.disabled = false; b.textContent = '车外拍照';
