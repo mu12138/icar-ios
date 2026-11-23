@@ -424,13 +424,16 @@ final class NativeBridge: NSObject {
 
     private func fetchVersionJSON() async -> String? {
         // iOS 专用：仓库里的 update/version.json（跟安卓的 icar-update 互不影响）
+        // 带时间戳参数绕开 CDN 缓存，推送后打开就能看到最新的公告/更新
+        let stamp = Int(Date().timeIntervalSince1970)
         let urls = [
-            "https://raw.githubusercontent.com/mu12138/icar-ios/main/update/version.json",
-            "https://cdn.jsdelivr.net/gh/mu12138/icar-ios@main/update/version.json",
+            "https://raw.githubusercontent.com/mu12138/icar-ios/main/update/version.json?t=\(stamp)",
+            "https://cdn.jsdelivr.net/gh/mu12138/icar-ios@main/update/version.json?t=\(stamp)",
         ]
         for u in urls {
             guard let url = URL(string: u) else { continue }
-            var req = URLRequest(url: url, timeoutInterval: 4)
+            var req = URLRequest(url: url, timeoutInterval: 4,
+                                 cachePolicy: .reloadIgnoringLocalAndRemoteCacheData)
             req.setValue("application/json", forHTTPHeaderField: "Accept")
             guard let (data, resp) = try? await URLSession.shared.data(for: req),
                   (resp as? HTTPURLResponse)?.statusCode == 200,

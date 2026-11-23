@@ -25,5 +25,12 @@ PY
 
 git add update/version.json
 git commit -q -m "推送更新：v$VER ($BUILD)"
-for i in 1 2 3; do git push -q origin main && { echo "== 已推送 =="; exit 0; }; sleep 4; done
+for i in 1 2 3; do
+  if git push -q origin main; then
+    curl -s -m 20 "https://purge.jsdelivr.net/gh/mu12138/icar-ios@main/update/version.json" >/dev/null && \
+      echo "== 已推送（jsDelivr 缓存已清） =="
+    exit 0
+  fi
+  sleep 4
+done
 echo "push 失败，稍后重试一次即可（文件已改好并 commit）"; exit 1
