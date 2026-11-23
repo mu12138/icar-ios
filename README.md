@@ -19,6 +19,17 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.14 (13)
+- **自定义主题 / 背景在 iOS 上真能用了**（之前 `pickBg` 是空实现，点了没反应）：
+  - 「选择背景图片」走系统 PHPicker，选完压到长边 1600 存成 `Documents/bg.jpg`，
+    本地服务加了一条 `/__bg.jpg` 路由喂给页面，页面照安卓那套 `url("__bg.jpg?v=…")` 用。
+  - 模糊、暗度、卡片样式（玻璃/清透）、圆角、阴影、卡片色、文字色、图标色、强调色
+    全部落到 `kvGet/kvSet`（UserDefaults），换端口、重启 App 都不丢。
+- **9 套预设主题一起带进来**：樱粉 / 暖砂 / 墨灰 / 晴空 / 宝石 / 藕粉 / 冬夜 / 青空 / 深海，
+  用的就是安卓 `app.js` 里的 `THEMES` + `bg/*.jpg`（图片随 WebUI 打进包），
+  点一下整套换（背景 + 强调色 + 图标色 + 暗度 + 模糊）。
+- Info.plist 加 `NSPhotoLibraryUsageDescription`。
+
 ### v0.13 (12)
 - 加应用图标：`iCar/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`，
   用的就是安卓那份「白色车侧影 + 黑底」图标（`/1000/AI/icar-mod/icon/final_icon_1024.png`），

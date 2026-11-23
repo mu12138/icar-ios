@@ -1,4 +1,5 @@
 import Foundation
+import PhotosUI
 import UIKit
 import WebKit
 
@@ -17,6 +18,9 @@ final class NativeBridge: NSObject {
 
     /// 空调诊断：上一次尝试的逐条结果，页面点失败提示能看
     private(set) var lastAcLog = ""
+
+    /// 正在等选图结果的 JS 回调 id
+    private var bgCbId = ""
 
     private let kvSuite = "icar_web"
     private let gateSuite = "gate"
@@ -258,8 +262,10 @@ final class NativeBridge: NSObject {
         case "keepAlive":
             let on = (args.first as? NSNumber)?.boolValue ?? false
             kv.set(on ? "1" : "0", forKey: "icar.keep")
-        case "pickBg", "clearBg":
-            break   // iOS 自定义背景图待做，先静默忽略，不打断主流程
+        case "pickBg":
+            await MainActor.run { self.presentBgPicker(cb: cb) }
+        case "clearBg":
+            Self.deleteBackground()
         case "ntfOpen", "ntfCopyCmd", "ntfClearLog":
             break   // iOS 没有安卓那种通知使用权监听，设置页会显示未开启
         default:
@@ -487,7 +493,94 @@ final class NativeBridge: NSObject {
     }
 }
 
+
+// MARK: - 自定义背景图
+
+extension NativeBridge {
+    static func bgFileURL() -> URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return docs.appendingPathComponent("bg.jpg")
+    }
+
+    static func deleteBackground() {
+        try? FileManager.default.removeItem(at: bgFileURL())
+    }
+
+    /// 长边压到 1600 再存 jpg，页面通过 /__bg.jpg 读
+    static func saveBackground(_ image: UIImage) -> Bool {
+        let maxSide: CGFloat = 1600
+        let w = max(1, image.size.width), h = max(1, image.size.height)
+        let scale = min(1, maxSide / max(w, h))
+        let size = CGSize(width: (w * scale).rounded(), height: (h * scale).rounded())
+        let fmt = UIGraphicsImageRendererFormat.default()
+        fmt.scale = 1
+        let resized = UIGraphicsImageRenderer(size: size, format: fmt).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        guard let data = resized.jpegData(compressionQuality: 0.85) else { return false }
+        do {
+            try data.write(to: bgFileURL(), options: .atomic)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    @MainActor
+    func presentBgPicker(cb: String) {
+        guard let vc = Self.topViewController() else {
+            send(cb, ok: false, msg: "界面还没准备好")
+            return
+        }
+        var cfg = PHPickerConfiguration(photoLibrary: .shared())
+        cfg.filter = .images
+        cfg.selectionLimit = 1
+        let picker = PHPickerViewController(configuration: cfg)
+        picker.delegate = self
+        bgCbId = cb
+        vc.present(picker, animated: true)
+    }
+
+    static func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let window = scenes.flatMap { $0.windows }.first { $0.isKeyWindow }
+        var vc = window?.rootViewController
+        while let p = vc?.presentedViewController { vc = p }
+        return vc
+    }
+}
+
+extension NativeBridge: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        let cb = bgCbId
+        bgCbId = ""
+        guard let item = results.first else {
+            Task { @MainActor in self.send(cb, ok: false, msg: "已取消") }
+            return
+        }
+        let provider = item.itemProvider
+        guard provider.canLoadObject(ofClass: UIImage.self) else {
+            Task { @MainActor in self.send(cb, ok: false, msg: "这张图读不了") }
+            return
+        }
+        provider.loadObject(ofClass: UIImage.self) { obj, error in
+            let ok: Bool
+            let msg: String
+            if let img = obj as? UIImage {
+                ok = NativeBridge.saveBackground(img)
+                msg = ok ? "ok" : "保存失败"
+            } else {
+                ok = false
+                msg = error?.localizedDescription ?? "读取失败"
+            }
+            Task { @MainActor in self.send(cb, ok: ok, msg: msg) }
+        }
+    }
+}
+
 // MARK: - WebKit 回调
+
 
 extension NativeBridge: WKScriptMessageHandler, WKUIDelegate {
     func userContentController(_ userContentController: WKUserContentController,

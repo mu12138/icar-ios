@@ -106,6 +106,18 @@ final class CarWebServer {
         if rel.isEmpty { rel = "index.html" }
         if rel.contains("..") { send(conn, status: "403 Forbidden", mime: "text/plain", body: Data()); return }
 
+        // 自定义背景图：页面里用 url("__bg.jpg?v=…")，图存在 App 沙盒里
+        if rel == "__bg.jpg" || rel == "_bg.jpg" {
+            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let f = docs.appendingPathComponent("bg.jpg")
+            if let body = try? Data(contentsOf: f) {
+                send(conn, status: "200 OK", mime: "image/jpeg", body: body)
+            } else {
+                send(conn, status: "404 Not Found", mime: "text/plain", body: Data("no bg".utf8))
+            }
+            return
+        }
+
         // 先找网页界面目录，再退回车模目录（3D/*.glb 在 CarWeb 里）
         var file: URL?
         for dir in [uiDir, rootDir].compactMap({ $0 }) {

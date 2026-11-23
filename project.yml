@@ -31,14 +31,15 @@ targets:
         CFBundleDevelopmentRegion: zh_CN
         # 版本号：和下面的 MARKETING_VERSION / CURRENT_PROJECT_VERSION 保持一致
         # （release-ios.sh 会一起改，别只改一处）
-        CFBundleShortVersionString: "0.13"
-        CFBundleVersion: "12"
+        CFBundleShortVersionString: "0.14"
+        CFBundleVersion: "13"
         UILaunchScreen: {}
         UIUserInterfaceStyle: Dark
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIRequiredDeviceCapabilities:
           - arm64
+        NSPhotoLibraryUsageDescription: 选一张照片当 App 的背景图
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
           NSAllowsArbitraryLoads: true
@@ -52,8 +53,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cn.icar.native
         PRODUCT_NAME: iCar
-        MARKETING_VERSION: "0.13"
-        CURRENT_PROJECT_VERSION: "12"
+        MARKETING_VERSION: "0.14"
+        CURRENT_PROJECT_VERSION: "13"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Manual
