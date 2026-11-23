@@ -2258,8 +2258,9 @@ function bindLoc() {
 }
 
 // ---------------- 启动 ----------------
-// ---------------- 更新提示 ----------------
-// 版本信息来自 Gitee / jsDelivr 上的 version.json，拉不到就静默跳过
+// ---------------- 更新提示 / 公告 ----------------
+// iOS 用自己那份 version.json（icar-ios 仓库 update/version.json），
+// 跟安卓 icar-update 完全分开：发 iOS 公告不会影响安卓，反之亦然。
 async function checkUpdate(curCode) {
   if (checkUpdate.done) return;
   checkUpdate.done = true;
@@ -2271,16 +2272,31 @@ async function checkUpdate(curCode) {
   } catch (e) {
     return;
   }
-  if (!info || !info.code || !info.url) return;
-  if (Number(info.code) <= Number(curCode || 0)) return;
-  showUpdateBar(info);
+  if (!info) return;
+  // 公告和更新分开判断：没有新版本也要能显示公告
+  if (info.code && info.url && Number(info.code) > Number(curCode || 0)) showUpdateBar(info);
+  showNoticeBar(info);
+}
+
+/** 顶部浮层容器：更新条和公告条按顺序往下排 */
+function topStack() {
+  let box = document.getElementById('top-stack');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'top-stack';
+    box.style.cssText = 'position:fixed;left:12px;right:12px;' +
+      'top:calc(var(--sat, 0px) + 10px);z-index:9999;' +
+      'display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    document.body.appendChild(box);
+  }
+  return box;
 }
 
 function showUpdateBar(info) {
   if (document.getElementById('upd-bar')) return;
   const bar = document.createElement('div');
   bar.id = 'upd-bar';
-  bar.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:9999;' +
+  bar.style.cssText = 'pointer-events:auto;' +
     'background:linear-gradient(135deg,#2E7DFF,#1B5FD9);color:#fff;border-radius:14px;' +
     'padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.45);font-size:14px;' +
     'display:flex;align-items:center;gap:10px;';
@@ -2289,16 +2305,58 @@ function showUpdateBar(info) {
     '<div style="flex:1;line-height:1.35;min-width:0">' +
       '<b>有新版本 ' + (info.version || '') + '</b>' +
       '<div style="opacity:.85;font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis">' +
-        (info.note || '点击前往网盘下载') + extra + '</div>' +
+        (info.note || '点击前往下载') + extra + '</div>' +
     '</div>' +
     '<button id="upd-go" style="flex:none;background:#fff;color:#1B5FD9;border:0;border-radius:9px;' +
       'padding:8px 14px;font-size:13px;font-weight:600">去下载</button>' +
     '<span id="upd-x" style="flex:none;opacity:.75;padding:4px 6px;font-size:16px">✕</span>';
-  document.body.appendChild(bar);
+  topStack().appendChild(bar);
   bar.querySelector('#upd-go').onclick = () => {
     try { Native.openUrl(info.url); } catch (e) { toast('打不开链接', 'err'); }
   };
   bar.querySelector('#upd-x').onclick = () => bar.remove();
+}
+
+/**
+ * 公告条：version.json 里的 notice 字段，纯文字。
+ * 关掉后记住这条公告内容，内容变了才会再弹（不会每次启动都烦人）。
+ * 可选 notice_url：点了跳转（不填就只显示文字）。
+ */
+function showNoticeBar(info) {
+  const text = (info && info.notice ? String(info.notice) : '').trim();
+  if (!text) return;
+  const seen = store.get('icar.noticeSeen', '');
+  if (seen === text) return;
+  if (document.getElementById('ntc-bar')) return;
+
+  const bar = document.createElement('div');
+  bar.id = 'ntc-bar';
+  bar.style.cssText = 'pointer-events:auto;' +
+    'background:rgba(28,32,42,.96);color:#fff;border:1px solid rgba(255,255,255,.12);' +
+    'border-radius:14px;padding:11px 14px;box-shadow:0 8px 24px rgba(0,0,0,.4);' +
+    'font-size:13px;display:flex;align-items:flex-start;gap:10px;';
+  bar.innerHTML =
+    '<div style="flex:1;line-height:1.45;min-width:0;white-space:pre-wrap">' +
+      '<b style="color:#7FB4FF">公告</b> ' + text.replace(/</g, '&lt;') +
+    '</div>' +
+    (info.notice_url ? '<button id="ntc-go" style="flex:none;background:#fff;color:#1B5FD9;border:0;' +
+      'border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600">' +
+      (info.notice_btn || '查看').replace(/</g, '&lt;') + '</button>' : '') +
+    '<span id="ntc-x" style="flex:none;opacity:.7;padding:2px 4px;font-size:15px">✕</span>';
+  if (info.notice_url) bar.style.cursor = 'pointer';
+  topStack().appendChild(bar);
+  bar.querySelector('#ntc-x').onclick = (e) => {
+    e.stopPropagation();
+    store.set('icar.noticeSeen', text);
+    bar.remove();
+  };
+  const openNotice = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    try { Native.openUrl(info.notice_url); } catch (e2) { toast('打不开链接', 'err'); }
+  };
+  if (info.notice_url) bar.onclick = openNotice;
+  const go = bar.querySelector('#ntc-go');
+  if (go) go.onclick = openNotice;
 }
 
 function showApp(st) {

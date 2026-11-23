@@ -114,8 +114,8 @@ final class NativeBridge: NSObject {
         o["seriesCode"] = Store.get("seriesCode") ?? ""
         o["seriesName"] = Store.get("seriesName") ?? ""
         o["phone"] = Store.get("phone") ?? ""
-        // 安卓那份 version.json 的 code 是安卓 versionCode，拿它比 iOS build 会误报更新
-        o["versionCode"] = 0
+        // iOS 有自己那份 version.json（icar-ios 仓库 update/version.json），code 就是 iOS build
+        o["versionCode"] = Int(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0") ?? 0
         return Self.json(o)
     }
 
@@ -423,7 +423,11 @@ final class NativeBridge: NSObject {
     // MARK: - 小工具
 
     private func fetchVersionJSON() async -> String? {
-        let urls = ["https://gitee.com/mu12138s/icar-update/raw/master/version.json"]
+        // iOS 专用：仓库里的 update/version.json（跟安卓的 icar-update 互不影响）
+        let urls = [
+            "https://cdn.jsdelivr.net/gh/mu12138/icar-ios@main/update/version.json",
+            "https://raw.githubusercontent.com/mu12138/icar-ios/main/update/version.json",
+        ]
         for u in urls {
             guard let url = URL(string: u) else { continue }
             var req = URLRequest(url: url, timeoutInterval: 4)

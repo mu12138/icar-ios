@@ -19,6 +19,20 @@ SwiftUI 写的车控 App，界面用 iOS 原生毛玻璃材质（`.ultraThinMate
 
 ## 更新记录
 
+### v0.16 (15)
+- **公告功能加上，而且跟安卓完全分开**：
+  - iOS 的版本/公告源改成自己仓库里的 `update/version.json`
+    （`https://cdn.jsdelivr.net/gh/mu12138/icar-ios@main/update/version.json`，
+    兜底 `https://raw.githubusercontent.com/mu12138/icar-ios/main/update/version.json`）。
+    安卓还是 `mu12138s/icar-update`，两边各发各的，互不影响。
+  - 网页这边补上公告条（`notice` / `notice_url` / `notice_btn`）和顶部浮层容器（`top-stack`），
+    更新条和公告条会往下叠；公告关掉后按内容记 `icar.noticeSeen`，内容变了才再弹。
+  - `Native.state().versionCode` 改回真实 build 号，配合 iOS 自己的 version.json 判断更新。
+  - 页面顶栏/弹层头部补 `--sat` / `--sab`：加载完把 iOS 安全区高度塞进去，不再压状态栏。
+
+**发 iOS 公告**：改仓库 `update/version.json` 的 `notice`（可选 `notice_url`、`notice_btn`），
+提交推送即可；想同时推新版本就把 `code` 改成新 build、`version` 写版本号、`url` 填下载地址。
+
 ### v0.15 (14)
 - **iOS 网页改成独立一套**：`iCar/WebUI/` 是 iOS 自己的分支，不再从安卓 `core/assets/web`
   同步覆盖；安卓改动不会自动过来，iOS 这边想加功能手动挑。

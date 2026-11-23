@@ -61,6 +61,17 @@ struct WebUIView: UIViewRepresentable {
             }
         }
 
+        /// 页面顶栏要给状态栏让位：把 iOS 的安全区高度塞进 --sat / --sab
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            let win = webView.window
+            let top = max(win?.safeAreaInsets.top ?? 0, 44)
+            let bottom = max(win?.safeAreaInsets.bottom ?? 0, 20)
+            webView.evaluateJavaScript(
+                "document.documentElement.style.setProperty('--sat','\(top)px');" +
+                "document.documentElement.style.setProperty('--sab','\(bottom)px');",
+                completionHandler: nil)
+        }
+
         /// 页面里的外链（抖音、更新包）交给系统浏览器
         func webView(_ webView: WKWebView,
                      decidePolicyFor navigationAction: WKNavigationAction,
