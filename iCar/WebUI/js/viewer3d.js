@@ -1,3 +1,9 @@
+// 转速展示：超出合理范围（16383/65535 之类占位值）就显示 --
+function rpmText(v) {
+  const n = +v || 0;
+  return (n > 12000 || n <= 0) ? '--' : Math.round(n) + ' rpm';
+}
+
 // 3D 车辆查看器 - 按照模型渲染差异说明配置
         class Vehicle3DViewer {
             constructor(canvas) {
@@ -584,7 +590,7 @@
                 
                 // 第四页：其他信息
                 document.getElementById('detail-speed').textContent = (data.vehicleSpeed || data.speed || 0) + ' km/h';
-                document.getElementById('detail-rpm').textContent = data.engineSpeed === 65535 ? '--' : (data.engineSpeed || 0) + ' rpm';
+                document.getElementById('detail-rpm').textContent = rpmText(data.engineSpeed);
                 document.getElementById('detail-water-temp').textContent = (data.engineWaterTemp || 0) + ' ℃';
                 document.getElementById('detail-voltage').textContent = (data.batteryVoltage || 0) + ' V';
                 document.getElementById('detail-altitude').textContent = (data.alti || 0) + ' m';
@@ -734,7 +740,7 @@
                         title.textContent = '发动机详情';
                         items = [
                             { label: '发动机状态', value: data.engineStatus, isLight: true },
-                            { label: '转速', value: data.engineSpeed === 65535 ? '--' : data.engineSpeed + ' rpm', isText: true },
+                            { label: '转速', value: rpmText(data.engineSpeed), isText: true },
                             { label: '水温', value: (data.engineWaterTemp || 0) + '℃', isText: true },
                             { label: '冷却液状态', value: data.engineCoolantStatus, isLight: true },
                             { label: '启动时间', value: data.ignitionTime || '--', isText: true }

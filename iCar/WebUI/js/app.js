@@ -1277,6 +1277,14 @@ const FLAGS = [
   ['sunroof', '天窗'], ['trunk', '后备箱'],
 ];
 
+// 转速归一：车端熄火时给的是「无数据」占位值（实测 16383 = 0x3FFF，也有 65535），
+// 直接当转速会把「发动机已启动」误挂上去。汽油机不会超过 12000 转，超出范围一律算 0。
+const RPM_MAX = 12000;
+function engineRpm(v) {
+  const n = +v || 0;
+  return (n > RPM_MAX || n < 0) ? 0 : n;
+}
+
 function paintFlags(d) {
   const box = $('car-flags');
   if (!box) return;
@@ -1285,8 +1293,7 @@ function paintFlags(d) {
   // 车机数据不新鲜时别挂发动机标签，熄火后不会一直留着
   // 发动机是否真在转：只看转速。
   // engineStatus 在部分车型上「上电」就给 2，电压也会被充到 13V 以上，两者都不可靠。
-  const raw = +d.engineSpeed || 0;
-  const rpm = raw >= 60000 ? 0 : raw;   // 65535 = 车端无数据
+  const rpm = engineRpm(d.engineSpeed);
   if (d.online && rpm > 0) opened.push('<span class="flag">发动机已启动</span>');
   box.classList.toggle('hide', opened.length === 0);
   box.innerHTML = opened.join('');
@@ -1631,7 +1638,7 @@ function renderMore(d) {
     ${t('车内温度', d.tempIn + ' ℃')}
     ${t('水温', d.waterTemp > 0 ? Math.round(d.waterTemp) + ' ℃' : '--')}
     ${t('车速', Math.round(d.speed || 0) + ' km/h')}
-    ${t('转速', (+d.engineSpeed || 0) > 0 ? Math.round(d.engineSpeed) + ' rpm' : '--')}
+    ${t('转速', engineRpm(d.engineSpeed) > 0 ? Math.round(engineRpm(d.engineSpeed)) + ' rpm' : '--')}
     ${t('发动机状态位', 'engineStatus=' + (d.engineStatus ?? '--'))}
     ${t('电瓶电压', vol + ' V')}
 

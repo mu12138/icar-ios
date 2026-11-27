@@ -414,7 +414,8 @@ final class NativeBridge: NSObject {
         o["waterTemp"] = num(d, "engineWaterTemp")
         o["engineStatus"] = intVal(d, "engineStatus")
         var rpm = num(d, "engineSpeed")
-        if rpm >= 60000 { rpm = 0 }   // 65535 = 无数据
+        // 熄火时车端给的是占位值（实测 16383 = 0x3FFF，也有 65535），超过 12000 一律当没有
+        if rpm > 12000 || rpm < 0 { rpm = 0 }
         o["engineSpeed"] = rpm
         return o
     }
